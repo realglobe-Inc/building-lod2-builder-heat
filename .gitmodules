@@ -1,3 +1,0 @@
-[submodule "src/building_lod2_builder_heat/libs/heat"]
-	path = src/building_lod2_builder_heat/libs/heat
-	url = https://github.com/realglobe-Inc/heat.git

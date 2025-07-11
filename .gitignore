@@ -180,3 +180,5 @@ tmp/
 config/local.json
 config/secrets.json
 *.secret
+
+*.pth
