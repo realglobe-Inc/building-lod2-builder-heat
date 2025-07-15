@@ -413,7 +413,7 @@ torchvision = ">=0.22.1,<0.23.0"
 type = "git"
 url = "https://github.com/realglobe-Inc/heat.git"
 reference = "2025-dev"
-resolved_reference = "049027ee021c943e61df5c368e78cabdeca99019"
+resolved_reference = "579ccbbcf418b8f8f3d53456e3a02abea97fa4a1"
 
 [[package]]
 name = "jinja2"
