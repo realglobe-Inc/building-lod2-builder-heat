@@ -84,10 +84,10 @@ poetry run detect-roof-edges \
 ```json
 {
    "corners": [
-      [39, 44], 
-      [71, 59], 
+      [39, 44],
+      [71, 59],
       [19, 65]
-   ], 
+   ],
    "edges": [
       [0, 1],
       [1, 2],
