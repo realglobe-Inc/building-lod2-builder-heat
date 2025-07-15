@@ -322,7 +322,9 @@ def _update_json(json_file_path: Path, data: dict):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def _fit_image(image: NDArray[np.uint8], size: int) -> NDArray[np.uint8]:
+def _fit_image(
+    image: NDArray[np.uint8], size: int, max_scale_factor: float = 4.0
+) -> NDArray[np.uint8]:
     """
     補間法を用いて、与えられた画像の長辺を目的のサイズに合わせます。
 
@@ -333,6 +335,8 @@ def _fit_image(image: NDArray[np.uint8], size: int) -> NDArray[np.uint8]:
     :type image: NDArray[np.uint8]
     :param size: 長辺を合わせるサイズ。
     :type size: int
+    :param max_scale_factor: 最大拡大率。
+    :type max_scale_factor: float
     :return: 拡大縮小された画像。
     :rtype: NDArray[np.uint8]
     """
@@ -349,25 +353,11 @@ def _fit_image(image: NDArray[np.uint8], size: int) -> NDArray[np.uint8]:
         return cv2.resize(image, (width, height), interpolation=cv2.INTER_LANCZOS4)
 
     scale_factor = height / current_height
+    if scale_factor > max_scale_factor:
+        width = int(round(max_scale_factor * current_width))
+        height = int(round(max_scale_factor * current_height))
 
-    # ジャギー抑制のために段階的拡大
-    num_steps = max(1, int(np.log2(scale_factor)))
-    intermediate_scales = np.exp2(np.linspace(0, np.log2(scale_factor), num_steps + 1))
-
-    current_image = image
-    for scale in intermediate_scales[1:]:
-        new_width = int(round(current_width * scale))
-        new_height = int(round(current_height * scale))
-        current_image = cv2.resize(
-            current_image, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4
-        )
-
-    if current_image.shape[:2] != (width, height):
-        current_image = cv2.resize(
-            current_image, (width, height), interpolation=cv2.INTER_LANCZOS4
-        )
-
-    return current_image
+    return cv2.resize(image, (width, height), interpolation=cv2.INTER_LANCZOS4)
 
 
 if __name__ == "__main__":
