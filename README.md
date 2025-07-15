@@ -131,6 +131,14 @@ poetry run detect-roof-edges \
 - **所属**: realglobe.jp
 - **バージョン**: 0.1.0
 
+## ライセンス
+
+このプロジェクトは GNU General Public License v3.0 またはそれ以降のバージョン（GPL-3.0-or-later）の下でライセンスされています。
+
+依存関係である [HEAT](https://github.com/realglobe-Inc/heat) ライブラリが GPL ライセンスを使用しているため、このプロジェクトも GPL ライセンスを採用しています。
+
+詳細については [LICENSE](LICENSE) ファイルを参照してください。
+
 ## トラブルシューティング
 
 ### よくある問題
