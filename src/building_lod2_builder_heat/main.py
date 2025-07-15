@@ -1,4 +1,5 @@
 import json
+import math
 import sys
 from json import JSONDecodeError
 from pathlib import Path
@@ -185,25 +186,79 @@ def _load_las(
 
     bgr_data = np.full((len(x_values), len(y_values), 3), 255, dtype=np.uint8)
     depth_data = np.full((len(x_values), len(y_values)), 255, dtype=np.uint8)
-    inpaint_mask = np.zeros((len(x_values), len(y_values)), dtype=np.uint8)
+    inpaint_mask = np.zeros((len(x_values), len(y_values)), dtype=np.bool)
     for i in range(len(x_values)):
         for j in range(len(y_values)):
-            if grid_indices[i, j] >= 0:
-                idx = int(grid_indices[i, j])
-                if idx:
-                    # OpenCVはBGR
-                    bgr_data[i, j, 0] = las_data.blue[idx]
-                    bgr_data[i, j, 1] = las_data.green[idx]
-                    bgr_data[i, j, 2] = las_data.red[idx]
-                    depth_data[i, j] = int(
-                        round(((las_data.z[idx] - z_min) / z_range) * 255)
-                    )
-                else:
-                    inpaint_mask[i, j] = 255
+            idx = int(grid_indices[i, j])
+            if idx < 0:
+                inpaint_mask[i, j] = True
+            else:
+                # OpenCVはBGR
+                bgr_data[i, j, 0] = las_data.blue[idx]
+                bgr_data[i, j, 1] = las_data.green[idx]
+                bgr_data[i, j, 2] = las_data.red[idx]
+                depth_data[i, j] = int(
+                    math.floor(((las_data.z[idx] - z_min) / z_range) * 256)
+                )
 
     # bgr_dataとdepth_dataの穴あき部分を補完する
-    bgr_data = cv2.inpaint(bgr_data, inpaint_mask, 3, cv2.INPAINT_TELEA)
-    depth_data = cv2.inpaint(depth_data, inpaint_mask, 3, cv2.INPAINT_TELEA)
+    # 1マス離れた箇所にinpaint_maskがFalseの箇所があれば、その平均にする。
+    # 1マス離れた箇所に無ければ、2マス離れた場所を調べ、inpaint_maskがFalseの箇所があれば、その平均する
+    # 2マス離れた場所にもなければ、そのまま
+
+    height, width = inpaint_mask.shape
+    a = 0
+    b = 0
+    c = 0
+    for i in range(height):
+        for j in range(width):
+            if not inpaint_mask[i, j]:
+                b += 1
+                continue
+            # 1マス離れた近傍を探索
+            nearby = []
+            for di, dj in [
+                (1, 0),
+                (0, 1),
+                (-1, 0),
+                (0, -1),
+            ]:
+                ni = i + di
+                nj = j + dj
+                if 0 <= ni < height and 0 <= nj < width and not inpaint_mask[ni, nj]:
+                    nearby.append((ni, nj))
+            if len(nearby) == 0:
+                # 2マス離れた近傍を探索
+                for di, dj in [
+                    (2, 0),
+                    (1, 1),
+                    (0, 2),
+                    (-1, 1),
+                    (-2, 0),
+                    (-1, -1),
+                    (0, -2),
+                    (1, -1),
+                ]:
+                    ni = i + di
+                    nj = j + dj
+                    if (
+                        0 <= ni < height
+                        and 0 <= nj < width
+                        and not inpaint_mask[ni, nj]
+                    ):
+                        nearby.append((ni, nj))
+
+            if nearby:
+                a += 1
+                # 2マス離れた点の平均をとる
+                bgr_data[i, j] = np.mean(
+                    [bgr_data[ni, nj] for ni, nj in nearby], axis=0
+                ).astype(np.uint8)
+                depth_data[i, j] = int(
+                    np.mean([depth_data[ni, nj] for ni, nj in nearby])
+                )
+            else:
+                c += 1
 
     if crs is not None and crs.axis_info[0].direction != "east":
         bgr_data = bgr_data.transpose(1, 0, 2)
