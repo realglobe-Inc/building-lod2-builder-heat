@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import cv2
@@ -44,6 +45,11 @@ def run(
         None, "--intermediate-dir", help="中間生成物を保存するディレクトリ。"
     ),
     gpu: bool = typer.Option(True, "--gpu/--cpu", help="GPUで実行するかどうか"),
+    skip_exist: bool = typer.Option(
+        True,
+        "--skip-exist/--overwrite",
+        help="既に結果が存在する場合はスキップするかどうか。",
+    ),
 ):
     """
     屋根線を抽出する。
@@ -57,6 +63,19 @@ def run(
 
     dsm_files = dsm_dir.glob("*.las")
     for dsm_file in dsm_files:
+        output_file = output_dir / f"{dsm_file.stem}.json"
+        if skip_exist and output_file.exists():
+            with open(output_file, "r", encoding="utf-8") as f:
+                json_data = json.load(f)
+                if "roof_corners" in json_data:
+                    print(f"{dsm_file}をスキップします")
+                    continue
+
+        files_dir = None
+        if intermediate_dir is not None:
+            files_dir = intermediate_dir / dsm_file.stem
+            files_dir.mkdir(parents=True, exist_ok=True)
+
         print(f"{dsm_file}を処理します")
 
         outline: GeoOutline | None = None
@@ -80,11 +99,8 @@ def run(
                 print(f"{ortho_file}からRGB画像を読み込みました")
 
                 # 入力画像を出力する
-                if intermediate_dir:
-                    intermediate_dir.mkdir(parents=True, exist_ok=True)
-                    cv2.imwrite(
-                        str(intermediate_dir / f"{dsm_file.stem}_ortho.png"), ortho_bgr
-                    )
+                if files_dir is not None:
+                    cv2.imwrite(str(files_dir / "ortho.png"), ortho_bgr)
 
         dsm_bgr, dsm_depth, dsm_bounds = load_las(
             dsm_file,
@@ -98,24 +114,19 @@ def run(
         )
 
         # 入力画像を出力する
-        if intermediate_dir:
-            intermediate_dir.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(intermediate_dir / f"{dsm_file.stem}_dsm_rgb.png"), dsm_bgr)
-            cv2.imwrite(
-                str(intermediate_dir / f"{dsm_file.stem}_dsm_depth.png"), dsm_depth
-            )
+        if files_dir:
+            cv2.imwrite(str(files_dir / "dsm_rgb.png"), dsm_bgr)
+            cv2.imwrite(str(files_dir / "dsm_depth.png"), dsm_depth)
 
         input_bgr = ortho_bgr if ortho_bgr is not None else dsm_bgr
         padded_bgr, bounds = _pad_image(input_bgr, canvas_size)
         padded_depth, _ = _pad_image(dsm_depth, canvas_size, pixel_size=1)
 
         # 入力画像を出力する
-        if intermediate_dir:
+        if files_dir:
+            cv2.imwrite(str(files_dir / "padded_rgb.png"), padded_bgr)
             cv2.imwrite(
-                str(intermediate_dir / f"{dsm_file.stem}_padded_rgb.png"), padded_bgr
-            )
-            cv2.imwrite(
-                str(intermediate_dir / f"{dsm_file.stem}_padded_depth.png"),
+                str(files_dir / "padded_depth.png"),
                 padded_depth,
             )
 
@@ -124,18 +135,18 @@ def run(
 
         print(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
         result_data = {
-            "corners": corners.tolist(),
-            "edges": edges.tolist(),
-            "canvas_size": canvas_size,
-            "image_bounds": bounds.ltrb,
+            "roof_corners": corners.tolist(),
+            "roof_edges": edges.tolist(),
+            "roof_canvas_size": canvas_size,
+            "roof_image_bounds": bounds.ltrb,
         }
         if dsm_bounds:
-            result_data["geo_bounds"] = dsm_bounds.ltrb
-            result_data["geo_crs"] = dsm_bounds.crs.to_string()
-        update_json(output_dir / f"{dsm_file.stem}.json", result_data)
+            result_data["roof_geo_bounds"] = dsm_bounds.ltrb
+            result_data["roof_crs"] = dsm_bounds.crs.to_string()
+        update_json(output_file, result_data)
 
         # 結果画像を出力する
-        if intermediate_dir:
+        if files_dir:
             visualized_bgr = padded_bgr.copy()
             for edge in edges:
                 cv2.line(
@@ -153,9 +164,7 @@ def run(
                     (255, 0, 0),
                     -1,
                 )
-            cv2.imwrite(
-                str(intermediate_dir / f"{dsm_file.stem}_edges.png"), visualized_bgr
-            )
+            cv2.imwrite(str(files_dir / "result.png"), visualized_bgr)
 
         pass
 

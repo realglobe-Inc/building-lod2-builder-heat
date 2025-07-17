@@ -9,6 +9,7 @@ from pyproj import CRS
 def load_obj_crs_from_json(json_file_path: Path) -> CRS | None:
     return _load_crs_from_json(json_file_path, "obj_")
 
+
 def load_las_crs_from_json(json_file_path: Path) -> CRS | None:
     return _load_crs_from_json(json_file_path, "las_")
 
