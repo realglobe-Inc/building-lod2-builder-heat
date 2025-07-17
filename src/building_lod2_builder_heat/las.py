@@ -151,7 +151,7 @@ def load_las(
         canvas_height = int(canvas_width * las_normal_height / las_normal_width)
     if canvas_width > max_factor * las_normal_width:
         canvas_width = int(max_factor * las_normal_width)
-        canvas_height = int(canvas_width * las_normal_height)
+        canvas_height = int(max_factor * las_normal_height)
 
     return get_image((canvas_width, canvas_height), las_bounds)
 
