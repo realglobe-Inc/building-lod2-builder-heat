@@ -89,6 +89,21 @@ def load_las(
         z_min = z_min - (min_z_range - z_range) / 2
         z_range = min_z_range
 
+    def _calculate_weight(
+        sorted_distances: list[float], max_use_count: int = 3
+    ) -> list[float]:
+        if len(sorted_distances) == 0:
+            return []
+        if sorted_distances[0] == 0:
+            return [1.0]
+
+        reciprocals = []
+        for i in range(min(max_use_count, len(sorted_distances))):
+            distance = sorted_distances[i]
+            reciprocals.append(1 / (distance * distance))
+        total = sum(reciprocals)
+        return [reciprocal / total for reciprocal in reciprocals]
+
     def get_image(
         size: tuple[int, int], bounds: GeoBounds
     ) -> tuple[NDArray[np.uint8], NDArray[np.uint8], GeoBounds]:
@@ -116,18 +131,22 @@ def load_las(
                 )
                 if len(las_indices) == 0:
                     continue
-                # TODO 複数点の距離の逆数に応じた加重平均にした方が良いか
-                las_idx, _ = las_indices[0]
+                # 距離の逆数の二乗に応じた加重平均
+                weights = _calculate_weight(list(map(lambda p: p[1], las_indices)))
+                blue = 0.0
+                green = 0.0
+                red = 0.0
+                depth = 0.0
+                for i in range(len(weights)):
+                    idx, _ = las_indices[i]
+                    blue += weights[i] * las_data.blue[idx]
+                    green += weights[i] * las_data.green[idx]
+                    red += weights[i] * las_data.red[idx]
+                    depth += weights[i] * (las_data.z[idx] - z_min) / z_range
                 bgr_canvas[canvas_j, canvas_i] = np.array(
-                    [
-                        las_data.blue[las_idx],
-                        las_data.green[las_idx],
-                        las_data.red[las_idx],
-                    ]
+                    [blue, green, red], dtype=np.uint8
                 )
-                depth_canvas[canvas_j, canvas_i] = int(
-                    (las_data.z[las_idx] - z_min) / z_range * 255
-                )
+                depth_canvas[canvas_j, canvas_i] = int(depth * 255)
         return bgr_canvas, depth_canvas, bounds
 
     if canvas_bounds is not None:
