@@ -126,7 +126,7 @@ def load_las(
                     ]
                 )
                 depth_canvas[canvas_j, canvas_i] = int(
-                    (las_data.z[las_idx] - z_min) / z_range * 256
+                    (las_data.z[las_idx] - z_min) / z_range * 255
                 )
         return bgr_canvas, depth_canvas, bounds
 
