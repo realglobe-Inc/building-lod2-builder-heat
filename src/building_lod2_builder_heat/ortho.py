@@ -39,7 +39,10 @@ def load_ortho(
     """
     with rasterio.open(ortho_file_path) as ortho:
         # 画像データを読み込む
-        image = ortho.read(1)
+        red = ortho.read(1)  # バンド1（赤）
+        green = ortho.read(2)  # バンド2（緑）
+        blue = ortho.read(3)  # バンド3（青）
+        image = np.stack([blue, green, red], axis=-1)
 
         # 画像のサイズを取得する
         width = ortho.width

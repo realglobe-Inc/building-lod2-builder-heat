@@ -63,6 +63,8 @@ def run(
         if obj_dir is not None:
             obj_file = (obj_dir / dsm_file.name).with_suffix(".obj")
             outline = load_outline_from_obj(obj_file)
+            if outline is not None:
+                print(f"{obj_file}から外形線を読み込みました")
 
         ortho_bgr: NDArray[np.uint8] | None = None
         ortho_bounds: Bounds | None = None
@@ -74,12 +76,22 @@ def run(
                 outline=outline,
             )
 
+            if outline is not None:
+                print(f"{ortho_file}からRGB画像を読み込みました")
+
+                # 入力画像を出力する
+                if intermediate_dir:
+                    intermediate_dir.mkdir(parents=True, exist_ok=True)
+                    cv2.imwrite(
+                        str(intermediate_dir / f"{dsm_file.stem}_ortho.png"), ortho_bgr
+                    )
+
         dsm_bgr, dsm_depth, dsm_bounds = load_las(
             dsm_file,
             canvas_size=(
                 (canvas_size, canvas_size)
                 if ortho_bgr is None
-                else tuple(ortho_bgr.shape[:2][:, -1])
+                else (ortho_bgr.shape[1], ortho_bgr.shape[0])
             ),
             outline=outline,
             canvas_bounds=ortho_bounds,
@@ -110,7 +122,7 @@ def run(
         # TODO depthの利用
         corners, edges = model.infer(padded_bgr)
 
-        print(f"検出結果: {len(corners)}個のコーナー、{len(edges)}個のエッジ")
+        print(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
         result_data = {
             "corners": corners.tolist(),
             "edges": edges.tolist(),
@@ -122,6 +134,7 @@ def run(
             result_data["geo_crs"] = dsm_bounds.crs.to_string()
         update_json(output_dir / f"{dsm_file.stem}.json", result_data)
 
+        # 結果画像を出力する
         if intermediate_dir:
             visualized_bgr = padded_bgr.copy()
             for edge in edges:
