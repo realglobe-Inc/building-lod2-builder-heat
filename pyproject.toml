@@ -7,14 +7,15 @@ authors = [
 ]
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
-requires-python = ">=3.13"
+requires-python = ">=3.13,<4"
 dependencies = [
     "laspy (>=2.6.1,<3.0.0)",
     "numpy (>=2,<2.3.0)",
     "opencv-python (>=4.12.0.88,<5.0.0.0)",
     "pyproj (>=3.7.1,<4.0.0)",
+    "rasterio (>=1.4.3,<2.0.0)",
     "typer[all] (>=0.16.0,<0.17.0)",
-    "heat @ git+https://github.com/realglobe-Inc/heat.git@2025-dev"
+    "heat @ git+https://github.com/realglobe-Inc/heat.git@2025-dev",
     # # 以下はHEAT開発時に一時的に
     # "cython (>=3.1.2,<4.0.0)",
     # "einops (>=0.8.1,<0.9.0)",
