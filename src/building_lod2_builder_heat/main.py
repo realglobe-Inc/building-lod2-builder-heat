@@ -29,10 +29,16 @@ def run(
         help="抽出した屋根線情報を出力するディレクトリのパス。"
     ),
     ortho_dir: Path | None = typer.Option(
-        None, "--ortho-dir", help="オルソファイルを読み取るディレクトリ。", exists=True
+        None,
+        "--ortho-dir",
+        help="オルソファイルを読み取るディレクトリ。\n拡張子以外DSMと同じファイル名のファイルがある場合、DSMの代わりにRGB画像を取得する。",
+        exists=True,
     ),
     obj_dir: Path | None = typer.Option(
-        None, "--obj-dir", help="OBJファイルを読み取るディレクトリ。", exists=True
+        None,
+        "--obj-dir",
+        help="OBJファイルを読み取るディレクトリ。\n拡張子以外DSMと同じファイル名のファイルがある場合、外形線を画像拡大時の縁の処理に利用する。",
+        exists=True,
     ),
     intermediate_dir: Path | None = typer.Option(
         None, "--intermediate-dir", help="中間生成物を保存するディレクトリ。"
