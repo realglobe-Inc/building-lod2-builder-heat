@@ -15,7 +15,7 @@ def load_ortho(
     canvas_size: tuple[int, int],
     max_factor: float = 4.0,
     outline: GeoOutline | None = None,
-) -> tuple[NDArray[np.uint8], GeoBounds] | None:
+) -> tuple[NDArray[np.uint8] | None, GeoBounds | None]:
     """
     オルソ画像を読み込む。
 
@@ -52,7 +52,7 @@ def load_ortho(
         crs = ortho.crs
         if not crs:
             print(f"{ortho_file_path}の座標系が不明です", file=sys.stderr)
-            return None
+            return None, None
         bounds = ortho.bounds
         geo_bounds = GeoBounds(
             bounds.left, bounds.top, bounds.right, bounds.bottom, crs

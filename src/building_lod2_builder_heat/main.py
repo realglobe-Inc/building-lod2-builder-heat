@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 import cv2
@@ -95,7 +96,7 @@ def run(
                 outline=outline,
             )
 
-            if outline is not None:
+            if ortho_bgr is not None:
                 print(f"{ortho_file}からRGB画像を読み込みました")
 
                 # 入力画像を出力する
@@ -112,6 +113,9 @@ def run(
             outline=outline,
             canvas_bounds=ortho_bounds,
         )
+        if dsm_depth is None:
+            print(f"{dsm_file}を読み込めませんでした", file=sys.stderr)
+            continue
 
         # 入力画像を出力する
         if files_dir:
@@ -139,10 +143,9 @@ def run(
             "roof_edges": edges.tolist(),
             "roof_canvas_size": canvas_size,
             "roof_image_bounds": bounds.ltrb,
+            "roof_geo_bounds": dsm_bounds.ltrb,
+            "roof_crs": dsm_bounds.crs.to_string(),
         }
-        if dsm_bounds:
-            result_data["roof_geo_bounds"] = dsm_bounds.ltrb
-            result_data["roof_crs"] = dsm_bounds.crs.to_string()
         update_json(output_file, result_data)
 
         # 結果画像を出力する
@@ -165,8 +168,6 @@ def run(
                     -1,
                 )
             cv2.imwrite(str(files_dir / "result.png"), visualized_bgr)
-
-        pass
 
 
 def _pad_image(

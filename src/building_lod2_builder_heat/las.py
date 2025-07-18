@@ -20,7 +20,7 @@ def load_las(
     max_factor: float = 4.0,
     outline: GeoOutline | None = None,
     canvas_bounds: GeoBounds | None = None,
-) -> tuple[NDArray[np.uint8], NDArray[np.uint8], GeoBounds] | None:
+) -> tuple[NDArray[np.uint8] | None, NDArray[np.uint8] | None, GeoBounds | None]:
     """
     DSMから画像と深度を読み込む。
 
@@ -41,7 +41,7 @@ def load_las(
         crs = load_las_crs_from_json(las_file_path.with_suffix(".json"))
     if crs is None:
         print(f"DSMの座標系を特定できませんでした", file=sys.stderr)
-        return None
+        return None, None, None
 
     if outline is not None:
         outline = outline.transform_to(crs)
