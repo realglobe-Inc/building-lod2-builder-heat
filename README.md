@@ -6,9 +6,9 @@
 
 このツールは、以下の機能を提供します：
 
-- LASファイルとオルソ画像（航空写真）との統合処理（予定）
+- LASファイルとオルソ画像（航空写真）、OBJファイル（3Dメッシュモデル）との統合処理
 - HEATライブラリを使用した深層学習による屋根エッジ検出
-- 検出された屋根の角点座標の出力
+- 検出された屋根の角点座標と関連情報の出力
 
 ## 必要な環境
 
@@ -43,22 +43,46 @@ poetry run detect-roof-edges [OPTIONS] CHECKPOINT_FILE DSM_DIR OUTPUT_DIR
 #### オプション
 
 - `--ortho-dir PATH`: オルソ画像ファイルが格納されているディレクトリ（オプション）
+- `--obj-dir PATH`: OBJファイルが格納されているディレクトリ（オプション）
 - `--intermediate-dir PATH`: 中間生成物を保存するディレクトリ（オプション）
 - `--gpu/--cpu`: GPU使用の有無（デフォルト: GPU使用）
+- `--skip-exist/--overwrite`: 既に結果が存在する場合はスキップするかどうか（デフォルト: スキップ）
 
 ### 実行例
 
 ```bash
-# 基本的な実行
-poetry run detect-roof-edges roof_edge_detection_parameter.pth data/dsm-16 data/obj
+# 基本的な実行（DSMのみ）
+poetry run detect-roof-edges roof_edge_detection_parameter.pth data/dsm data/output
 
-# オルソ画像と中間ファイル保存を含む実行
+# オルソ画像を使用した実行
 poetry run detect-roof-edges \
-  --ortho-dir data/orth \
+  --ortho-dir data/ortho \
+  roof_edge_detection_parameter.pth \
+  data/dsm \
+  data/output
+
+# OBJファイルを使用した実行（外形線情報を利用）
+poetry run detect-roof-edges \
+  --obj-dir data/obj \
+  roof_edge_detection_parameter.pth \
+  data/dsm \
+  data/output
+
+# 全ての入力データと中間ファイル保存を含む実行
+poetry run detect-roof-edges \
+  --ortho-dir data/ortho \
+  --obj-dir data/obj \
   --intermediate-dir data/intermediate \
   roof_edge_detection_parameter.pth \
-  data/dsm-16 \
-  data/obj
+  data/dsm \
+  data/output
+
+# 既存結果を上書きする実行
+poetry run detect-roof-edges \
+  --overwrite \
+  roof_edge_detection_parameter.pth \
+  data/dsm \
+  data/output
 ```
 
 ## データ形式
@@ -75,24 +99,34 @@ poetry run detect-roof-edges \
 - 内容: 航空写真のオルソ画像
 - 命名規則: `<LASファイルと同一のID>.tif`
 
+#### OBJファイル（オプション）
+- 形式: `.obj`
+- 内容: 3Dメッシュモデル（建物の外形線抽出に使用）
+- 命名規則: `<LASファイルと同一のID>.obj`
+- 付随ファイル: `<同一のID>.json`（座標系情報を含む）
+
 ### 出力データ
 
 #### 屋根エッジ検出結果
 - 形式: `.json`
-- 内容: 検出された屋根の角点座標
+- 内容: 検出された屋根の角点座標と関連情報
 - 構造:
 ```json
 {
-   "corners": [
+   "roof_corners": [
       [39, 44],
       [71, 59],
       [19, 65]
    ],
-   "edges": [
+   "roof_edges": [
       [0, 1],
       [1, 2],
       [2, 3]
-   ]
+   ],
+   "roof_canvas_size": 256,
+   "roof_image_bounds": [64, 32, 192, 224],
+   "roof_geo_bounds": [139.123, 35.456, 139.789, 35.987],
+   "roof_crs": "EPSG:6677"
 }
 ```
 
@@ -100,10 +134,12 @@ poetry run detect-roof-edges \
 
 処理過程で以下のファイルが生成されます：
 
-- `*_dsm_depth.png`: DSMの深度画像
-- `*_dsm_rgb.png`: DSMのRGB可視化画像
-- `*_edges.png`: 検出された屋根エッジ画像
-- `*_padded_rgb.png`: パディング処理されたRGB画像
+- `ortho.png`: オルソ画像の入力データ（オルソ画像使用時）
+- `dsm_rgb.png`: DSMのRGB可視化画像
+- `dsm_depth.png`: DSMの深度画像
+- `padded_rgb.png`: パディング処理されたRGB画像
+- `padded_depth.png`: パディング処理された深度画像
+- `result.png`: 検出された屋根エッジと角点の可視化画像
 
 ## 技術仕様
 
@@ -113,6 +149,8 @@ poetry run detect-roof-edges \
 - **numpy**: 数値計算
 - **opencv-python**: 画像処理
 - **pyproj**: 座標変換
+- **rasterio**: ラスターデータ処理
+- **shapely**: 幾何学的図形処理
 - **typer**: コマンドラインインターフェース
 - **heat**: 屋根エッジ検出用深層学習ライブラリ
 
@@ -143,15 +181,11 @@ poetry run detect-roof-edges \
 
 ### よくある問題
 
-1. **GPU メモリ不足**
-   - `--cpu` オプションを使用してCPUで実行
-   - バッチサイズを小さくする
-
-2. **座標系の問題**
+1. **座標系の問題**
    - 入力データの座標系が正しく設定されているか確認
    - pyproj の CRS 設定を確認
 
-3. **ファイル形式エラー**
+2. **ファイル形式エラー**
    - LASファイルの形式とバージョンを確認
    - ファイル名の命名規則を確認
 
