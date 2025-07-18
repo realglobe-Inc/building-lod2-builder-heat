@@ -45,7 +45,7 @@ def update_json(json_file_path: Path, data: dict):
                 data = old
         except JSONDecodeError as e:
             print(
-                f"{json_file_path}をJSONとして読み込めなかったため、全体を上書きします",
+                f"{json_file_path}をJSONとして読み込めなかったため、全体を上書きします: {e}",
                 file=sys.stderr,
             )
             json_file_path.unlink()
