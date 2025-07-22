@@ -67,7 +67,7 @@ def run(
         canvas_size = 256
 
     dsm_files = dsm_dir.glob("*.las")
-    for dsm_file in dsm_files:
+    for dsm_file in sorted(dsm_files):
         output_file = output_dir / f"{dsm_file.stem}.json"
         if skip_exist and output_file.exists():
             with open(output_file, "r", encoding="utf-8") as f:
