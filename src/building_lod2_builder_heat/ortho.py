@@ -1,3 +1,4 @@
+import math
 import sys
 from pathlib import Path
 
@@ -75,24 +76,21 @@ def load_ortho(
             )
             return image, geo_bounds
 
-        # 外形線からマスクを作成する
-        mask = np.zeros((height, width), dtype=np.uint8)
-        outline_coords = np.array(outline.polygon.exterior.coords).astype(np.int32)
-        # TODO 座標からインデクスへの変換
-
-        cv2.fillPoly(mask, [outline_coords], 255)
-
         # 画像とマスクのスケーリング
         scaled_image = cv2.resize(image, new_size, interpolation=cv2.INTER_LANCZOS4)
-        scaled_mask = cv2.resize(mask, new_size, interpolation=cv2.INTER_LANCZOS4)
 
-        # 外形線にアンチエイリアシングを適用する
-        edge_kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
-        edges = cv2.filter2D(scaled_mask, -1, edge_kernel)
-        edges = edges > 0
+        index_polygon = []
+        for i in range(len(outline.polygon.exterior.coords)):
+            x, y = outline.polygon.exterior.coords[i]
+            x_idx = math.floor((x - geo_bounds.left) / geo_bounds.width * new_width)
+            y_idx = math.floor((geo_bounds.top - y) / geo_bounds.height * new_height)
+            index_polygon.append((x_idx, y_idx))
 
-        # 滑らかな縁に
-        scaled_image[edges] = cv2.GaussianBlur(scaled_image, (3, 3), 0)[edges]
+        # 凹形状を塗りつぶし
+        mask = np.zeros((new_height, new_width), dtype=np.uint8)
+        polygon_array = np.array(index_polygon, dtype=np.int32)
+        cv2.fillPoly(mask, [polygon_array], 255)
+        scaled_image[mask == 0] = [255, 255, 255]
         image = scaled_image
 
         return image, geo_bounds
