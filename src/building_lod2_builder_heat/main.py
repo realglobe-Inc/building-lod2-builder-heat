@@ -3,9 +3,9 @@ import os
 import sys
 from pathlib import Path
 
-import cv2
 import numpy as np
 import typer
+from PIL import Image, ImageDraw
 from heat import HEAT
 from numpy.typing import NDArray
 
@@ -105,7 +105,7 @@ def run(
 
                 # 入力画像を出力する
                 if files_dir is not None:
-                    cv2.imwrite(str(files_dir / "ortho.png"), ortho_bgr)
+                    _save_bgr_image(ortho_bgr, files_dir / "ortho.png")
 
         dsm_bgr, dsm_depth, dsm_bounds = load_las(
             dsm_file,
@@ -124,8 +124,8 @@ def run(
 
         # 入力画像を出力する
         if files_dir:
-            cv2.imwrite(str(files_dir / "dsm_rgb.png"), dsm_bgr)
-            cv2.imwrite(str(files_dir / "dsm_depth.png"), dsm_depth)
+            _save_bgr_image(dsm_bgr, files_dir / "dsm_rgb.png")
+            _save_grayscale_image(dsm_depth, files_dir / "dsm_depth.png")
 
         input_bgr = ortho_bgr if ortho_bgr is not None else dsm_bgr
         padded_bgr, bounds = _pad_image(input_bgr, canvas_size)
@@ -133,11 +133,8 @@ def run(
 
         # 入力画像を出力する
         if files_dir:
-            cv2.imwrite(str(files_dir / "padded_rgb.png"), padded_bgr)
-            cv2.imwrite(
-                str(files_dir / "padded_depth.png"),
-                padded_depth,
-            )
+            _save_bgr_image(padded_bgr, files_dir / "padded_rgb.png")
+            _save_grayscale_image(padded_depth, files_dir / "padded_depth.png")
 
         # TODO depthの利用
         corners, edges = model.infer(padded_bgr)
@@ -155,24 +152,72 @@ def run(
 
         # 結果画像を出力する
         if files_dir:
-            visualized_bgr = padded_bgr.copy()
-            for edge in edges:
-                cv2.line(
-                    visualized_bgr,
-                    corners[edge[0]],
-                    corners[edge[1]],
-                    (0, 255, 0),
-                    1,
-                )
-            for corner in corners:
-                cv2.circle(
-                    visualized_bgr,
-                    corner,
-                    2,
-                    (255, 0, 0),
-                    -1,
-                )
-            cv2.imwrite(str(files_dir / "result.png"), visualized_bgr)
+            visualized_bgr = _visualize_detection_results(padded_bgr, corners, edges)
+            _save_bgr_image(visualized_bgr, files_dir / "result.png")
+
+
+def _save_bgr_image(image_bgr: NDArray[np.uint8], output_path: Path) -> None:
+    """
+    BGR画像をPillowを使用してPNG形式で保存する。
+
+    Args:
+        image_bgr: BGR形式の画像配列
+        output_path: 出力パス
+    """
+    # BGRからRGBに変換
+    image_rgb = image_bgr[:, :, ::-1]  # BGRからRGBへ変換
+    image_pil = Image.fromarray(image_rgb)
+    image_pil.save(str(output_path))
+
+
+def _save_grayscale_image(image_gray: NDArray[np.uint8], output_path: Path) -> None:
+    """
+    グレースケール画像をPillowを使用してPNG形式で保存する。
+
+    Args:
+        image_gray: グレースケール画像配列
+        output_path: 出力パス
+    """
+    image_pil = Image.fromarray(image_gray, mode="L")
+    image_pil.save(str(output_path))
+
+
+def _visualize_detection_results(
+    image_bgr: NDArray[np.uint8], corners: NDArray[np.int32], edges: NDArray[np.int32]
+) -> NDArray[np.uint8]:
+    """
+    検出結果の可視化画像を生成する。
+
+    Args:
+        image_bgr: 元のBGR画像
+        corners: 角点座標の配列
+        edges: エッジの配列
+
+    Returns:
+        可視化結果のBGR画像
+    """
+    # BGRからRGBに変換してPIL Imageを作成
+    image_rgb = image_bgr[:, :, ::-1]
+    image_pil = Image.fromarray(image_rgb)
+    draw = ImageDraw.Draw(image_pil)
+
+    # エッジを描画（緑色の線）
+    for edge in edges:
+        start_point = tuple(corners[edge[0]])
+        end_point = tuple(corners[edge[1]])
+        draw.line([start_point, end_point], fill=(0, 255, 0), width=1)
+
+    # 角点を描画（赤色の円）
+    for corner in corners:
+        x, y = corner
+        # 円を描画（半径2の円）
+        draw.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(255, 0, 0))
+
+    # RGBからBGRに変換して返す
+    result_rgb = np.array(image_pil)
+    result_bgr = result_rgb[:, :, ::-1]
+
+    return result_bgr
 
 
 def _pad_image(
