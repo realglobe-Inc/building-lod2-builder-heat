@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -14,9 +15,6 @@ from building_lod2_builder_heat.obj import load_outline_from_obj
 from building_lod2_builder_heat.ortho import load_ortho
 from building_lod2_builder_heat.outline import GeoOutline
 from building_lod2_builder_heat.parameter import update_json
-
-# os.environ["_TYPER_STANDARD_TRACEBACK"] = "1"
-
 
 app = typer.Typer()
 
@@ -51,10 +49,16 @@ def run(
         "--skip-exist/--overwrite",
         help="既に結果が存在する場合はスキップするかどうか。",
     ),
+    rich_error: bool = typer.Option(
+        True,
+        "--rich-error/--normal-error",
+        help="エラー時に変数の内容等まで出力するか。",
+    ),
 ):
     """
     屋根線を抽出する。
     """
+    os.environ["_TYPER_STANDARD_TRACEBACK"] = "1" if rich_error else "0"
 
     print(f"モデルをロードします: {checkpoint_file}")
     model = HEAT(gpu)
