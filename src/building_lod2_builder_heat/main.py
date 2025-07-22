@@ -120,6 +120,7 @@ def run(
         if dsm_depth is None:
             print(f"{dsm_file}を読み込めませんでした", file=sys.stderr)
             continue
+        print(f"{dsm_file}からRGB画像と深度を読み込みました")
 
         # 入力画像を出力する
         if files_dir:
