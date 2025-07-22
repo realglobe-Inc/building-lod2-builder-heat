@@ -90,29 +90,29 @@ def run(
             if outline is not None:
                 print(f"{obj_file}から外形線を読み込みました")
 
-        ortho_bgr: NDArray[np.uint8] | None = None
+        ortho_rgb: NDArray[np.uint8] | None = None
         ortho_bounds: Bounds | None = None
         if ortho_dir:
             ortho_file = (ortho_dir / dsm_file.name).with_suffix(".tif")
-            ortho_bgr, ortho_bounds = load_ortho(
+            ortho_rgb, ortho_bounds = load_ortho(
                 ortho_file,
                 canvas_size=(canvas_size, canvas_size),
                 outline=outline,
             )
 
-            if ortho_bgr is not None:
+            if ortho_rgb is not None:
                 print(f"{ortho_file}からRGB画像を読み込みました")
 
                 # 入力画像を出力する
                 if files_dir is not None:
-                    _save_bgr_image(ortho_bgr, files_dir / "ortho.png")
+                    Image.fromarray(ortho_rgb).save(files_dir / "ortho.png")
 
-        dsm_bgr, dsm_depth, dsm_bounds = load_las(
+        dsm_rgb, dsm_depth, dsm_bounds = load_las(
             dsm_file,
             canvas_size=(
                 (canvas_size, canvas_size)
-                if ortho_bgr is None
-                else (ortho_bgr.shape[1], ortho_bgr.shape[0])
+                if ortho_rgb is None
+                else (ortho_rgb.shape[1], ortho_rgb.shape[0])
             ),
             outline=outline,
             canvas_bounds=ortho_bounds,
@@ -124,20 +124,20 @@ def run(
 
         # 入力画像を出力する
         if files_dir:
-            _save_bgr_image(dsm_bgr, files_dir / "dsm_rgb.png")
-            _save_grayscale_image(dsm_depth, files_dir / "dsm_depth.png")
+            Image.fromarray(dsm_rgb).save(files_dir / "dsm_rgb.png")
+            Image.fromarray(dsm_depth, mode="L").save(files_dir / "dsm_depth.png")
 
-        input_bgr = ortho_bgr if ortho_bgr is not None else dsm_bgr
-        padded_bgr, bounds = _pad_image(input_bgr, canvas_size)
+        input_rgb = ortho_rgb if ortho_rgb is not None else dsm_rgb
+        padded_rgb, bounds = _pad_image(input_rgb, canvas_size)
         padded_depth, _ = _pad_image(dsm_depth, canvas_size, pixel_size=1)
 
         # 入力画像を出力する
         if files_dir:
-            _save_bgr_image(padded_bgr, files_dir / "padded_rgb.png")
-            _save_grayscale_image(padded_depth, files_dir / "padded_depth.png")
+            Image.fromarray(padded_rgb).save(files_dir / "padded_rgb.png")
+            Image.fromarray(padded_depth, mode="L").save(files_dir / "padded_depth.png")
 
         # TODO depthの利用
-        corners, edges = model.infer(padded_bgr)
+        corners, edges = model.infer(padded_rgb[:, :, [2, 1, 0]])  # RGB -> BGR
 
         print(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
         result_data = {
@@ -152,54 +152,30 @@ def run(
 
         # 結果画像を出力する
         if files_dir:
-            visualized_bgr = _visualize_detection_results(padded_bgr, corners, edges)
-            _save_bgr_image(visualized_bgr, files_dir / "result.png")
-
-
-def _save_bgr_image(image_bgr: NDArray[np.uint8], output_path: Path) -> None:
-    """
-    BGR画像をPillowを使用してPNG形式で保存する。
-
-    Args:
-        image_bgr: BGR形式の画像配列
-        output_path: 出力パス
-    """
-    # BGRからRGBに変換
-    image_rgb = image_bgr[:, :, ::-1]  # BGRからRGBへ変換
-    image_pil = Image.fromarray(image_rgb)
-    image_pil.save(str(output_path))
-
-
-def _save_grayscale_image(image_gray: NDArray[np.uint8], output_path: Path) -> None:
-    """
-    グレースケール画像をPillowを使用してPNG形式で保存する。
-
-    Args:
-        image_gray: グレースケール画像配列
-        output_path: 出力パス
-    """
-    image_pil = Image.fromarray(image_gray, mode="L")
-    image_pil.save(str(output_path))
+            visualized_rgb = _visualize_detection_results(padded_rgb, corners, edges)
+            Image.fromarray(visualized_rgb).save(files_dir / "result_rgb.png")
+            visualized_depth = _visualize_detection_results(
+                np.array(Image.fromarray(padded_depth).convert("RGB")), corners, edges
+            )
+            Image.fromarray(visualized_depth).save(files_dir / "result_depth.png")
 
 
 def _visualize_detection_results(
-    image_bgr: NDArray[np.uint8], corners: NDArray[np.int32], edges: NDArray[np.int32]
+    image: NDArray[np.uint8], corners: NDArray[np.int32], edges: NDArray[np.int32]
 ) -> NDArray[np.uint8]:
     """
     検出結果の可視化画像を生成する。
 
     Args:
-        image_bgr: 元のBGR画像
+        image: 元のRGB画像
         corners: 角点座標の配列
         edges: エッジの配列
 
     Returns:
-        可視化結果のBGR画像
+        結果を重ねたRGB画像
     """
-    # BGRからRGBに変換してPIL Imageを作成
-    image_rgb = image_bgr[:, :, ::-1]
-    image_pil = Image.fromarray(image_rgb)
-    draw = ImageDraw.Draw(image_pil)
+    pil_image = Image.fromarray(image)
+    draw = ImageDraw.Draw(pil_image)
 
     # エッジを描画（緑色の線）
     for edge in edges:
@@ -207,17 +183,14 @@ def _visualize_detection_results(
         end_point = tuple(corners[edge[1]])
         draw.line([start_point, end_point], fill=(0, 255, 0), width=1)
 
+    d = 2
     # 角点を描画（赤色の円）
     for corner in corners:
         x, y = corner
-        # 円を描画（半径2の円）
-        draw.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(255, 0, 0))
+        # 円を描画（半径dの円）
+        draw.ellipse([x - d, y - d, x + d, y + d], fill=(0, 0, 255))
 
-    # RGBからBGRに変換して返す
-    result_rgb = np.array(image_pil)
-    result_bgr = result_rgb[:, :, ::-1]
-
-    return result_bgr
+    return np.array(pil_image)
 
 
 def _pad_image(

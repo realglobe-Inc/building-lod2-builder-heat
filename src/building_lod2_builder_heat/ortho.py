@@ -76,7 +76,7 @@ def load_ortho(
         )
 
         if scale < 1 or outline is None:
-            return np.transpose(data, (1, 2, 0))[:, :, [2, 1, 0]], geo_bounds
+            return np.transpose(data, (1, 2, 0)), geo_bounds
 
         scale_transform = rasterio.transform.from_bounds(
             bounds.left, bounds.bottom, bounds.right, bounds.top, new_width, new_height
@@ -113,7 +113,4 @@ def load_ortho(
                     bounds.left, bounds.top, bounds.right, bounds.bottom, crs
                 )
 
-                return (
-                    np.transpose(clipped_data, (1, 2, 0))[:, :, [2, 1, 0]],
-                    geo_bounds,
-                )
+                return np.transpose(clipped_data, (1, 2, 0)), geo_bounds

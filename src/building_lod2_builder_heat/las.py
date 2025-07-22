@@ -133,18 +133,18 @@ def load_las(
                     continue
                 # 距離の逆数の二乗に応じた加重平均
                 weights = _calculate_weight(list(map(lambda p: p[1], las_indices)))
-                blue = 0.0
-                green = 0.0
                 red = 0.0
+                green = 0.0
+                blue = 0.0
                 depth = 0.0
                 for i in range(len(weights)):
                     idx, _ = las_indices[i]
-                    blue += weights[i] * las_data.blue[idx]
-                    green += weights[i] * las_data.green[idx]
                     red += weights[i] * las_data.red[idx]
+                    green += weights[i] * las_data.green[idx]
+                    blue += weights[i] * las_data.blue[idx]
                     depth += weights[i] * (las_data.z[idx] - z_min) / z_range
                 bgr_canvas[canvas_j, canvas_i] = np.array(
-                    [blue, green, red], dtype=np.uint8
+                    [red, green, blue], dtype=np.uint8
                 )
                 depth_canvas[canvas_j, canvas_i] = int(depth * 255)
         return bgr_canvas, depth_canvas, bounds
