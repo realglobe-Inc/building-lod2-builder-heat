@@ -1,11 +1,12 @@
-import math
 import sys
 from pathlib import Path
 
-import cv2
 import numpy as np
 import rasterio
 from numpy.typing import NDArray
+from rasterio import MemoryFile
+from rasterio.enums import Resampling
+from rasterio.mask import mask
 
 from building_lod2_builder_heat.bounds import GeoBounds
 from building_lod2_builder_heat.outline import GeoOutline
@@ -40,10 +41,8 @@ def load_ortho(
     """
     with rasterio.open(ortho_file_path) as ortho:
         # 画像データを読み込む
-        red = ortho.read(1)  # バンド1（赤）
-        green = ortho.read(2)  # バンド2（緑）
-        blue = ortho.read(3)  # バンド3（青）
-        image = np.stack([blue, green, red], axis=-1)
+        data = ortho.read()
+        image = np.transpose(data, (1, 2, 0))[:, :, [2, 1, 0]]
 
         # 画像のサイズを取得する
         width = ortho.width
@@ -54,6 +53,7 @@ def load_ortho(
         if not crs:
             print(f"{ortho_file_path}の座標系が不明です", file=sys.stderr)
             return None, None
+        outline = outline.transform_to(crs) if outline else None
         bounds = ortho.bounds
         geo_bounds = GeoBounds(
             bounds.left, bounds.top, bounds.right, bounds.bottom, crs
@@ -66,31 +66,54 @@ def load_ortho(
         scale = min(scale_w, scale_h, max_factor)
         new_width = int(width * scale)
         new_height = int(height * scale)
-        new_size = (new_width, new_height)
 
         if scale == 1:
             return image, geo_bounds
+
+        data = ortho.read(
+            out_shape=(ortho.count, new_height, new_width),
+            resampling=Resampling.lanczos,
+        )
+
         if scale < 1 or outline is None:
-            image = cv2.resize(
-                image, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4
-            )
-            return image, geo_bounds
+            return np.transpose(data, (1, 2, 0))[:, :, [2, 1, 0]], geo_bounds
 
-        # 画像とマスクのスケーリング
-        scaled_image = cv2.resize(image, new_size, interpolation=cv2.INTER_LANCZOS4)
+        scale_transform = rasterio.transform.from_bounds(
+            bounds.left, bounds.bottom, bounds.right, bounds.top, new_width, new_height
+        )
+        meta = ortho.meta.copy()
+        meta.update(
+            {
+                "transform": scale_transform,
+                "crs": crs,
+                "width": new_width,
+                "height": new_height,
+            }
+        )
 
-        index_polygon = []
-        for i in range(len(outline.polygon.exterior.coords)):
-            x, y = outline.polygon.exterior.coords[i]
-            x_idx = math.floor((x - geo_bounds.left) / geo_bounds.width * new_width)
-            y_idx = math.floor((geo_bounds.top - y) / geo_bounds.height * new_height)
-            index_polygon.append((x_idx, y_idx))
+        with MemoryFile() as tmp_file:
+            with tmp_file.open(**meta) as tmp_ortho:
+                tmp_ortho.write(data)
 
-        # 凹形状を塗りつぶし
-        mask = np.zeros((new_height, new_width), dtype=np.uint8)
-        polygon_array = np.array(index_polygon, dtype=np.int32)
-        cv2.fillPoly(mask, [polygon_array], 255)
-        scaled_image[mask == 0] = [255, 255, 255]
-        image = scaled_image
+                clipped_data, clipped_transform = mask(
+                    tmp_ortho, [outline.polygon], crop=True, filled=True, nodata=255
+                )
+                clipped_meta = tmp_ortho.meta.copy()
+                clipped_meta.update(
+                    {
+                        "transform": clipped_transform,
+                        "crs": crs,
+                        "width": clipped_data.shape[2],
+                        "height": clipped_data.shape[1],
+                    }
+                )
 
-        return image, geo_bounds
+                bounds = tmp_ortho.bounds
+                geo_bounds = GeoBounds(
+                    bounds.left, bounds.top, bounds.right, bounds.bottom, crs
+                )
+
+                return (
+                    np.transpose(clipped_data, (1, 2, 0))[:, :, [2, 1, 0]],
+                    geo_bounds,
+                )
