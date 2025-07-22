@@ -58,7 +58,7 @@ def run(
     """
     屋根線を抽出する。
     """
-    os.environ["_TYPER_STANDARD_TRACEBACK"] = "1" if rich_error else "0"
+    os.environ["_TYPER_STANDARD_TRACEBACK"] = "" if rich_error else "true"
 
     print(f"モデルをロードします: {checkpoint_file}")
     model = HEAT(gpu)
