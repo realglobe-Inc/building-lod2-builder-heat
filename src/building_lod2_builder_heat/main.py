@@ -178,9 +178,10 @@ def _visualize_detection_results(
     draw = ImageDraw.Draw(pil_image)
 
     # エッジを描画（緑色の線）
+    edge: NDArray[np.int32]
     for edge in edges:
-        start_point = tuple(corners[edge[0]])
-        end_point = tuple(corners[edge[1]])
+        start_point = list(corners[edge[0]])
+        end_point = list(corners[edge[1]])
         draw.line([start_point, end_point], fill=(0, 255, 0), width=1)
 
     d = 2

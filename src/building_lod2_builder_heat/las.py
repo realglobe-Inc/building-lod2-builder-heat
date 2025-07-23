@@ -202,13 +202,13 @@ def _points_to_grid(
 
         # 補完
         new_values = [values[0]]
-        for i in range(1, len(values)):
-            diff = values[i] - values[i - 1]
+        for m in range(1, len(values)):
+            diff = values[m] - values[m - 1]
             if diff > min_diff:
                 steps = int(round(diff / min_diff))
                 for j in range(1, steps):
-                    new_values.append(values[i - 1] + j * min_diff)
-            new_values.append(values[i])
+                    new_values.append(values[m - 1] + j * min_diff)
+            new_values.append(values[m])
         return np.array(new_values)
 
     # 格子の切れ目の位置
