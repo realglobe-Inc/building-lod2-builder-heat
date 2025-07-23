@@ -11,7 +11,7 @@ from shapely import Point
 
 from building_lod2_builder_heat.bounds import GeoBounds
 from building_lod2_builder_heat.outline import GeoOutline
-from building_lod2_builder_heat.parameter import load_las_crs_from_json
+from building_lod2_builder_heat.parameter import load_dsm_crs_from_json
 
 
 def load_las(
@@ -38,7 +38,7 @@ def load_las(
         las_data = las.read()
     crs: CRS | None = las_data.header.parse_crs()
     if crs is None:
-        crs = load_las_crs_from_json(las_file_path.with_suffix(".json"))
+        crs = load_dsm_crs_from_json(las_file_path.with_suffix(".json"))
     if crs is None:
         print(f"DSMの座標系を特定できませんでした", file=sys.stderr)
         return None, None, None
