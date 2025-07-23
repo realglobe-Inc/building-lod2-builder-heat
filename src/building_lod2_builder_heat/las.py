@@ -116,6 +116,14 @@ def load_las(
         bgr_canvas = np.full((height, width, 3), 255, dtype=np.uint8)
         depth_canvas = np.full((height, width), 255, dtype=np.uint8)
 
+        shift = 0
+        if (
+            np.max(las_data.red) >= 256
+            or np.max(las_data.green) >= 256
+            or np.max(las_data.blue) >= 256
+        ):
+            shift = 8
+
         for canvas_j in range(height):
             for canvas_i in range(width):
                 x = bounds.left + canvas_i * canvas_x_step
@@ -139,9 +147,9 @@ def load_las(
                 depth = 0.0
                 for i in range(len(weights)):
                     idx, _ = las_indices[i]
-                    red += weights[i] * las_data.red[idx]
-                    green += weights[i] * las_data.green[idx]
-                    blue += weights[i] * las_data.blue[idx]
+                    red += weights[i] * (las_data.red[idx] >> shift)
+                    green += weights[i] * (las_data.green[idx] >> shift)
+                    blue += weights[i] * (las_data.blue[idx] >> shift)
                     depth += weights[i] * (las_data.z[idx] - z_min) / z_range
                 bgr_canvas[canvas_j, canvas_i] = np.array(
                     [red, green, blue], dtype=np.uint8
