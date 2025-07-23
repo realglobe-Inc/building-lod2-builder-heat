@@ -166,13 +166,11 @@ def _visualize_detection_results(
     """
     検出結果の可視化画像を生成する。
 
-    Args:
-        image: 元のRGB画像
-        corners: 角点座標の配列
-        edges: エッジの配列
+    :param image: 元のRGB画像
+    :param corners: 角点座標の配列
+    :param edges: エッジの配列
 
-    Returns:
-        結果を重ねたRGB画像
+    :return: 結果を重ねたRGB画像
     """
     pil_image = Image.fromarray(image)
     draw = ImageDraw.Draw(pil_image)
@@ -203,8 +201,8 @@ def _pad_image(
     """
     画像を正方形のキャンバスに収める。
 
-    input_image: 入力画像
-    return: キャンバスの中央に配置された画像とその配置場所
+    :param input_image: 入力画像
+    :return: キャンバスの中央に配置された画像とその配置場所
     """
 
     image_height, image_width = input_image.shape[:2]
