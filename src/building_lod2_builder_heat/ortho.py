@@ -40,10 +40,6 @@ def load_ortho(
     :return: 処理を経たオルソ画像と座標範囲。
     """
     with rasterio.open(ortho_file_path) as ortho:
-        # 画像データを読み込む
-        resized_data = ortho.read()
-        image = np.transpose(resized_data, (1, 2, 0))[:, :, [2, 1, 0]]
-
         # 画像のサイズを取得する
         width = ortho.width
         height = ortho.height
@@ -71,15 +67,15 @@ def load_ortho(
         new_height = int(height * scale)
 
         if scale == 1:
-            return image, geo_bounds
+            image_data = ortho.read()
+        else:
+            image_data = ortho.read(
+                out_shape=(ortho.count, new_height, new_width),
+                resampling=Resampling.lanczos,
+            )
 
-        resized_data = ortho.read(
-            out_shape=(ortho.count, new_height, new_width),
-            resampling=Resampling.lanczos,
-        )
-
-        if scale < 1 or outline is None:
-            return np.transpose(resized_data, (1, 2, 0)), geo_bounds
+        if outline is None:
+            return np.transpose(image_data, (1, 2, 0)), geo_bounds
 
         scale_transform = rasterio.transform.from_bounds(
             geo_bounds.left,
@@ -101,7 +97,7 @@ def load_ortho(
 
         with MemoryFile() as tmp_file:
             with tmp_file.open(**meta) as tmp_ortho:
-                tmp_ortho.write(resized_data)
+                tmp_ortho.write(image_data)
 
                 clipped_data, clipped_transform = mask(
                     tmp_ortho, [outline.polygon], filled=True, nodata=255
