@@ -41,8 +41,8 @@ def load_ortho(
     """
     with rasterio.open(ortho_file_path) as ortho:
         # 画像データを読み込む
-        data = ortho.read()
-        image = np.transpose(data, (1, 2, 0))[:, :, [2, 1, 0]]
+        resized_data = ortho.read()
+        image = np.transpose(resized_data, (1, 2, 0))[:, :, [2, 1, 0]]
 
         # 画像のサイズを取得する
         width = ortho.width
@@ -54,9 +54,12 @@ def load_ortho(
             print(f"{ortho_file_path}の座標系が不明です", file=sys.stderr)
             return None, None
         outline = outline.transform_to(crs) if outline else None
-        bounds = ortho.bounds
         geo_bounds = GeoBounds(
-            bounds.left, bounds.top, bounds.right, bounds.bottom, crs
+            ortho.bounds.left,
+            ortho.bounds.top,
+            ortho.bounds.right,
+            ortho.bounds.bottom,
+            crs,
         )
 
         # スケーリング係数を計算する
@@ -70,16 +73,21 @@ def load_ortho(
         if scale == 1:
             return image, geo_bounds
 
-        data = ortho.read(
+        resized_data = ortho.read(
             out_shape=(ortho.count, new_height, new_width),
             resampling=Resampling.lanczos,
         )
 
         if scale < 1 or outline is None:
-            return np.transpose(data, (1, 2, 0)), geo_bounds
+            return np.transpose(resized_data, (1, 2, 0)), geo_bounds
 
         scale_transform = rasterio.transform.from_bounds(
-            bounds.left, bounds.bottom, bounds.right, bounds.top, new_width, new_height
+            geo_bounds.left,
+            geo_bounds.bottom,
+            geo_bounds.right,
+            geo_bounds.top,
+            new_width,
+            new_height,
         )
         meta = ortho.meta.copy()
         meta.update(
@@ -93,7 +101,7 @@ def load_ortho(
 
         with MemoryFile() as tmp_file:
             with tmp_file.open(**meta) as tmp_ortho:
-                tmp_ortho.write(data)
+                tmp_ortho.write(resized_data)
 
                 clipped_data, clipped_transform = mask(
                     tmp_ortho, [outline.polygon], filled=True, nodata=255
@@ -108,9 +116,12 @@ def load_ortho(
                     }
                 )
 
-                bounds = tmp_ortho.bounds
                 geo_bounds = GeoBounds(
-                    bounds.left, bounds.top, bounds.right, bounds.bottom, crs
+                    tmp_ortho.bounds.left,
+                    tmp_ortho.bounds.top,
+                    tmp_ortho.bounds.right,
+                    tmp_ortho.bounds.bottom,
+                    crs,
                 )
 
                 return np.transpose(clipped_data, (1, 2, 0)), geo_bounds
