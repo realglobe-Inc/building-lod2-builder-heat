@@ -96,7 +96,7 @@ def load_ortho(
                 tmp_ortho.write(data)
 
                 clipped_data, clipped_transform = mask(
-                    tmp_ortho, [outline.polygon], crop=True, filled=True, nodata=255
+                    tmp_ortho, [outline.polygon], filled=True, nodata=255
                 )
                 clipped_meta = tmp_ortho.meta.copy()
                 clipped_meta.update(

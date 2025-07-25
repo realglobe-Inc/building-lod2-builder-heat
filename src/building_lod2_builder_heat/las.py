@@ -108,7 +108,7 @@ def load_las(
         size: tuple[int, int], bounds: GeoBounds
     ) -> tuple[NDArray[np.uint8], NDArray[np.uint8], GeoBounds]:
         width, height = size
-        # canvas_boundsの範囲をキャンバスいっぱいの画像にする
+        # boundsの範囲をキャンバスいっぱいの画像にする
         # 端っこまで入れるために(width -1)*canvas_x_stepが確実にbounds.widthを超えるようにする
         canvas_x_step = (bounds.width + bounds.width / width) / (width - 1)
         canvas_y_step = (bounds.height + bounds.height / height) / (height - 1)

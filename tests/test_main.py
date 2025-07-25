@@ -84,8 +84,8 @@ class TestRunIntegration:
     ):
         """オルソ画像を追加した場合のテスト"""
         dsm_dir = test_data_dir / "dsm"
-        ortho_dir = test_data_dir / "ortho"
-        expected_answers_dir = answers_dir / "dsm_ortho"
+        ortho_dir = test_data_dir / "ortho_clipped"
+        expected_answers_dir = answers_dir / "dsm_ortho_clipped"
 
         output_dir = temp_output_dir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
