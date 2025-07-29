@@ -182,3 +182,4 @@ config/secrets.json
 *.secret
 
 *.pth
+intermediate/

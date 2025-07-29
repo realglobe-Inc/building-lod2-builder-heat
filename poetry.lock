@@ -485,7 +485,7 @@ torchvision = ">=0.22.1,<0.23.0"
 type = "git"
 url = "https://github.com/realglobe-Inc/heat.git"
 reference = "2025-dev"
-resolved_reference = "84fb45dbc0d004f9d3acac15bf46f789ab0a36ca"
+resolved_reference = "8165238d104a8df0f3cad84da6da54a9586a195d"
 
 [[package]]
 name = "iniconfig"

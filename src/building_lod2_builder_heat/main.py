@@ -43,7 +43,11 @@ def run(
     intermediate_dir: Path | None = typer.Option(
         None, "--intermediate-dir", help="中間生成物を保存するディレクトリ。"
     ),
-    gpu: bool = typer.Option(True, "--gpu/--cpu", help="GPUで実行するかどうか"),
+    prefer_gpu: bool = typer.Option(
+        True,
+        "--prefer-gpu/--force-cpu",
+        help="GPUが利用可能ならGPUを利用するかどうか。",
+    ),
     skip_exist: bool = typer.Option(
         True,
         "--skip-exist/--overwrite",
@@ -61,8 +65,8 @@ def run(
     os.environ["_TYPER_STANDARD_TRACEBACK"] = "" if rich_error else "true"
 
     print(f"モデルをロードします: {checkpoint_file}")
-    model = HEAT(gpu)
-    canvas_size = model.load_checkpoint(str(checkpoint_file))
+    model = HEAT(force_cpu=not prefer_gpu)
+    canvas_size = model.load_checkpoint(checkpoint_file)
     if canvas_size is None:
         canvas_size = 256
 
