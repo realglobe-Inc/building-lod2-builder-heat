@@ -35,9 +35,9 @@ class TestRunIntegration:
             yield Path(tmp_dir)
 
     @pytest.fixture
-    def checkpoint_file(self, test_data_dir: Path) -> Path:
+    def checkpoint_file(self, project_root: Path, test_data_dir: Path) -> Path:
         """チェックポイントファイルを用意"""
-        checkpoint_file = Path("roof_edge_detection_parameter.pth")
+        checkpoint_file = project_root / "roof_edge_detection_parameter.pth"
         if checkpoint_file.exists():
             return checkpoint_file
 
