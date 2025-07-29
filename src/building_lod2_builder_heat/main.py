@@ -10,7 +10,7 @@ from heat import HEAT
 from numpy.typing import NDArray
 
 from building_lod2_builder_heat.bounds import Bounds
-from building_lod2_builder_heat.las import load_las
+from building_lod2_builder_heat.dsm import load_dsm
 from building_lod2_builder_heat.obj import load_outline_from_obj
 from building_lod2_builder_heat.ortho import load_ortho
 from building_lod2_builder_heat.outline import GeoOutline
@@ -107,7 +107,7 @@ def run(
                 if files_dir is not None:
                     Image.fromarray(ortho_rgb).save(files_dir / "ortho.png")
 
-        dsm_rgb, dsm_depth, dsm_bounds = load_las(
+        dsm_rgb, dsm_depth, dsm_bounds = load_dsm(
             dsm_file,
             canvas_size=(
                 (canvas_size, canvas_size)

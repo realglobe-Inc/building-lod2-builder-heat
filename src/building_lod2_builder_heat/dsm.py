@@ -14,7 +14,7 @@ from building_lod2_builder_heat.outline import GeoOutline
 from building_lod2_builder_heat.parameter import load_dsm_crs_from_json
 
 
-def load_las(
+def load_dsm(
     las_file_path: Path,
     canvas_size: tuple[int, int],
     max_factor: float = 4.0,
