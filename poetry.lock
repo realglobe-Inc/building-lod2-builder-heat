@@ -643,6 +643,46 @@ pyproj = ["pyproj"]
 requests = ["requests"]
 
 [[package]]
+name = "lazrs"
+version = "0.7.0"
+description = "Python bindings for laz-rs"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "lazrs-0.7.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:19d9897941c1a3c54198cb9db19526d7840bd7f82487e3542d28c5be80c6ded1"},
+    {file = "lazrs-0.7.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:834ef7f828044d8322fa53ee2f2b9bcd615f2bdf0c123504f622e54cb4f98836"},
+    {file = "lazrs-0.7.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e64dadfafcea7bf9df6f27d9439f5f75eae22a280399cc0de735abaa4bcb6f72"},
+    {file = "lazrs-0.7.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:376d8ca61cb00580a1a7e68aa1dc8a80d230953b255c7b0f16abae7f4edb4391"},
+    {file = "lazrs-0.7.0-cp310-cp310-win32.whl", hash = "sha256:f469ee4847214a3f901c8419213cd87b9ebeb22308af8253faad45bde8fc34b2"},
+    {file = "lazrs-0.7.0-cp310-cp310-win_amd64.whl", hash = "sha256:f1bd15a9ddec761a356d65b3ce819336ffdfcc3a79fd3b34272709f0d7c00ad5"},
+    {file = "lazrs-0.7.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:4236ace28a55d8b1b6d181ea2390a4a57de896587b914ea21a7e887cd493e87f"},
+    {file = "lazrs-0.7.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:42e943f7859c5f31067f28e5766f3a23237b3c3246b57c98ad4b765ccad69b11"},
+    {file = "lazrs-0.7.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:17a2dde6acbc77e13981f6d85b7c8e994b0004e63abb15602dc2b65d1301550d"},
+    {file = "lazrs-0.7.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:17369fd3b8518f2f35f342f3802a373cb722e39a8ed0353d2d37632f6210145d"},
+    {file = "lazrs-0.7.0-cp311-cp311-win32.whl", hash = "sha256:b89c2cfdf38264356549d73246fb4a490add3e9cddd38b0334633cc0f5a529ee"},
+    {file = "lazrs-0.7.0-cp311-cp311-win_amd64.whl", hash = "sha256:c09e1adaa6ba3a6a5b1287bdb3b4b88500ad0a1d7847ee0902041175e16fa5aa"},
+    {file = "lazrs-0.7.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:a6fc38ef1b1226ebfe86bcc9ee3b07856f51baf91be6be6e958b1c88807460d6"},
+    {file = "lazrs-0.7.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a05f25e15ac8fcbedc9cf513258f0f7631d029275b2e86a424af4638d39142f3"},
+    {file = "lazrs-0.7.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8e1e59591f290e9400acfff9380a43c71b91db5c740f7b303c2ca17c289574ab"},
+    {file = "lazrs-0.7.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:051503a48d2db393230adc5442b484edcc1c8d089d8cc82dbb079faf6b2477c8"},
+    {file = "lazrs-0.7.0-cp312-cp312-win32.whl", hash = "sha256:1cfa3857dc19acc3fa56e0d481d7114254999c2620b29c9d53fc4358d62d5e0b"},
+    {file = "lazrs-0.7.0-cp312-cp312-win_amd64.whl", hash = "sha256:b908d90ed3872424f93c0c22f89568f08ec9af9b4fc6811b9978c5f97b018dfc"},
+    {file = "lazrs-0.7.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:74c2bfc0ffd6102914e4b651743482fea2d6304577f574ed8920948ed5ce6119"},
+    {file = "lazrs-0.7.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:36232df2ed1fc4f506a6e920daf2c5fcf8beed116a8a7fc6bdd80e24293cf511"},
+    {file = "lazrs-0.7.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:43b2e49908e1781f3c3ace7456412e7656aa0a66c15c916423a102a594369000"},
+    {file = "lazrs-0.7.0-cp313-cp313-win32.whl", hash = "sha256:cf77556120a5eaed34ba633ab3196fd90c16e2e87306e108bfb60433e200d979"},
+    {file = "lazrs-0.7.0-cp313-cp313-win_amd64.whl", hash = "sha256:d2cacb2521a3043698193e40d10289c51063dda11c4c585f81015764369f9a97"},
+    {file = "lazrs-0.7.0-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:5e1a6436b923e50fc4348d6e7dd973377cc544b7a1f6f8b91bccdfc89f6afb2f"},
+    {file = "lazrs-0.7.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:f93f66493e77f0838e26b942edd980f774d3ab8ecae5f42902018942f7814568"},
+    {file = "lazrs-0.7.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:95bdfb03f5fd81f4c36b9dc9c2cd9052b8592b1f3862d1aef8263adce55a7fdd"},
+    {file = "lazrs-0.7.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cc205d81cca5b5beb514d2b481afe3e20746eb1fd8b095fdbeace6c5571e72d2"},
+    {file = "lazrs-0.7.0-cp39-cp39-win32.whl", hash = "sha256:46a1c12c1872c230bced352a2fbd67407caebc8e866e3ed5a140161ec0ddaa31"},
+    {file = "lazrs-0.7.0-cp39-cp39-win_amd64.whl", hash = "sha256:9717e681720bdb89bce5b06114198b9cc4e10d9e2ef2c05ea4f27460ac237724"},
+    {file = "lazrs-0.7.0.tar.gz", hash = "sha256:53191b351c1d9fa45f74471698384bf42bde14599309645fb9d4c353f0fb7f24"},
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
@@ -1990,4 +2030,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4"
-content-hash = "880f9ebe73f5184d23a507eb8b7f074293bfb79f648ad822e0b994b11181b83f"
+content-hash = "88da63ebb1a278c88720bb9353687139879324b89ffb7c2a8ca8bd90ae443b55"
