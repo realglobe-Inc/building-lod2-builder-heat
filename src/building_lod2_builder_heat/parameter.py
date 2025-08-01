@@ -19,7 +19,11 @@ def _load_crs_from_json(json_file_path: Path, prefix: str) -> CRS | None:
     JSONファイルから座標系情報を読み取ります。
 
     :param json_file_path: JSONファイルのパス
-    :return: 座標系文字列（見つからない場合はNone）
+    :type json_file_path: Path
+    :param prefix: プレフィックス文字列
+    :type prefix: str
+    :returns: 座標系文字列（見つからない場合はNone）
+    :rtype: CRS | None
     """
     with open(json_file_path, "r", encoding="utf-8") as f:
         json_data = json.load(f)
@@ -34,7 +38,9 @@ def update_json(json_file_path: Path, data: dict):
     JSONファイルに書き込む。
 
     :param json_file_path: JSONファイルのパス
+    :type json_file_path: Path
     :param data: 更新するデータ
+    :type data: dict
     """
     # 既存のデータを読み込み
     if json_file_path.exists():

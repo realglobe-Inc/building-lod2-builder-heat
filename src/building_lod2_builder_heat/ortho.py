@@ -34,10 +34,15 @@ def load_ortho(
     outlineに沿ってジャギーの発生を抑制します。
 
     :param ortho_file_path: 読み込むオルソ画像のファイルパス。
+    :type ortho_file_path: Path
     :param canvas_size: 出力画像を収める最大サイズ。
+    :type canvas_size: tuple[int, int]
     :param max_factor: 拡大時の最大倍率。
+    :type max_factor: float
     :param outline: 拡大する際に対象物の輪郭を保つための補助とする対象物の外形線。
-    :return: 処理を経たオルソ画像と座標範囲。
+    :type outline: GeoOutline | None
+    :returns: 処理を経たオルソ画像と座標範囲。
+    :rtype: tuple[NDArray[np.uint8] | None, GeoBounds | None]
     """
     with rasterio.open(ortho_file_path) as ortho:
         # 画像のサイズを取得する

@@ -54,7 +54,9 @@ class GeoBounds:
         座標系を変換した新しい境界を返します。
 
         :param target_crs: 変換先の座標系
-        :return: 変換後の新しいBoundsオブジェクト
+        :type target_crs: CRS
+        :returns: 変換後の新しいBoundsオブジェクト
+        :rtype: GeoBounds
         """
         if self.crs == target_crs:
             return self

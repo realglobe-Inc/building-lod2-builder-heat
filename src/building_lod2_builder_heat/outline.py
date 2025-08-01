@@ -16,7 +16,9 @@ class GeoOutline:
         座標系を変換した新しい外形線を返します。
 
         :param target_crs: 変換先の座標系
-        :return: 変換後の新しいGeoOutlineオブジェクト
+        :type target_crs: CRS
+        :returns: 変換後の新しいGeoOutlineオブジェクト
+        :rtype: GeoOutline
         """
         if self.crs == target_crs:
             return self

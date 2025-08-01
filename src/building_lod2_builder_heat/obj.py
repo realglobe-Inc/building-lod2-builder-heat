@@ -16,7 +16,9 @@ class Obj3D:
         Obj3Dオブジェクトを初期化します。
 
         :param vertices: 頂点座標のリスト
+        :type vertices: list
         :param raw_faces: 面の頂点インデックスのリスト
+        :type raw_faces: list
         """
         self.vertices = vertices
         self.raw_faces = raw_faces
@@ -31,7 +33,9 @@ class Obj3D:
         OBJファイルから読み込んだObj3Dを返す
 
         :param file_path: OBJファイルのパス
-        :return: Obj3Dオブジェクト
+        :type file_path: Path
+        :returns: Obj3Dオブジェクト
+        :rtype: Obj3D
         """
         vertices = []
         raw_faces = []
@@ -60,7 +64,8 @@ class Obj3D:
         """
         3Dメッシュモデルから水平面上の外形線ポリゴンを作成します。
 
-        :return: 水平面上の外形線（作成に失敗した場合はNone）
+        :returns: 水平面上の外形線（作成に失敗した場合はNone）
+        :rtype: Polygon | None
         """
         # 各面を水平面に投影してポリゴンのリストを作成
         horizontal_polygons = []
@@ -89,7 +94,9 @@ def load_outline_from_obj(obj_file_path: Path) -> GeoOutline | None:
     OBJファイルから3Dメッシュモデルの水平面上の外形線を読み取る。
 
     :param obj_file_path: 3Dメッシュモデルを表すOBJファイルのパス
-    :return: 3Dメッシュモデルの外形線と座標系
+    :type obj_file_path: Path
+    :returns: 3Dメッシュモデルの外形線と座標系
+    :rtype: GeoOutline | None
     """
     outline = Obj3D.load(obj_file_path).calculate_horizontal_outline()
     if outline is None:

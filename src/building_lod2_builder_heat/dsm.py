@@ -25,11 +25,17 @@ def load_dsm(
     DSMから画像と深度を読み込む。
 
     :param las_file_path: 読み込むDSMのファイルパス。
+    :type las_file_path: Path
     :param canvas_size: 出力画像を収める最大サイズ。
+    :type canvas_size: tuple[int, int]
     :param max_factor: 拡大時の最大倍率。
+    :type max_factor: float
     :param outline: 拡大する際に対象物の輪郭を保つための補助とする対象物の外形線。
+    :type outline: GeoOutline | None
     :param canvas_bounds: 出力に収める座標範囲。
-    :return: DSMから抽出したカラー画像と深度画像と座標範囲。
+    :type canvas_bounds: GeoBounds | None
+    :returns: DSMから抽出したカラー画像と深度画像と座標範囲。
+    :rtype: tuple[NDArray[np.uint8] | None, NDArray[np.uint8] | None, GeoBounds | None]
     """
     min_z_range = 10
 
@@ -193,11 +199,13 @@ def _points_to_grid(
     存在しない場合は格子点はNoneになります。
 
     :param points: 3つの値（x座標とy座標とz座標）を持つ点の配列。
-    :return:
+    :type points: np.ndarray
+    :returns:
         - 行と列がそれぞれ入力点群のどの位置かを示す配列。
           この配列をあとすると、xがi番目、yがj番目の点はpoints[a[j,i]]
         - ソートされたx値の列。
         - ソートされたy値の列。
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
     """
     # X座標とY座標の一意な値を取得
     unique_x = np.unique(points[:, 0])
