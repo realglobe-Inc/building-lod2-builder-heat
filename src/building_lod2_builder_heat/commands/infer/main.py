@@ -1,20 +1,20 @@
 import json
 import os
-import sys
 from pathlib import Path
 
 import numpy as np
+import sys
 import typer
 from PIL import Image, ImageDraw
 from heat import HEAT
 from numpy.typing import NDArray
 
-from building_lod2_builder_heat.bounds import Bounds
-from building_lod2_builder_heat.dsm import load_dsm
-from building_lod2_builder_heat.obj import load_outline_from_obj
-from building_lod2_builder_heat.ortho import load_ortho
-from building_lod2_builder_heat.outline import GeoOutline
-from building_lod2_builder_heat.parameter import update_json
+from building_lod2_builder_heat.commands.infer.bounds import Bounds
+from building_lod2_builder_heat.commands.infer.dsm import load_dsm
+from building_lod2_builder_heat.commands.infer.obj import load_outline_from_obj
+from building_lod2_builder_heat.commands.infer.ortho import load_ortho
+from building_lod2_builder_heat.commands.infer.outline import GeoOutline
+from building_lod2_builder_heat.commands.infer.parameter import update_json
 
 app = typer.Typer()
 

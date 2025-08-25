@@ -1,15 +1,15 @@
-import sys
 from pathlib import Path
 
 import numpy as np
 import rasterio
+import sys
 from numpy.typing import NDArray
 from rasterio import MemoryFile
 from rasterio.enums import Resampling
 from rasterio.mask import mask
 
-from building_lod2_builder_heat.bounds import GeoBounds
-from building_lod2_builder_heat.outline import GeoOutline
+from building_lod2_builder_heat.commands.infer.bounds import GeoBounds
+from building_lod2_builder_heat.commands.infer.outline import GeoOutline
 
 
 def load_ortho(

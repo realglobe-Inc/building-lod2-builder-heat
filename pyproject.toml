@@ -42,7 +42,7 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [project.scripts]
-detect-roof-edges = "building_lod2_builder_heat.main:app"
+detect-roof-edges = "building_lod2_builder_heat.commands.infer.main:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]

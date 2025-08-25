@@ -2,8 +2,8 @@ from pathlib import Path
 
 from shapely import Polygon, unary_union
 
-from building_lod2_builder_heat.outline import GeoOutline
-from building_lod2_builder_heat.parameter import load_obj_crs_from_json
+from building_lod2_builder_heat.commands.infer.outline import GeoOutline
+from building_lod2_builder_heat.commands.infer.parameter import load_obj_crs_from_json
 
 
 class Obj3D:

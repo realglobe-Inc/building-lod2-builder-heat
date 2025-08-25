@@ -7,7 +7,7 @@ from typing import Iterator
 import pytest
 from typer.testing import CliRunner
 
-from building_lod2_builder_heat.main import app
+from building_lod2_builder_heat.commands.infer.main import app
 
 
 class TestRunIntegration:

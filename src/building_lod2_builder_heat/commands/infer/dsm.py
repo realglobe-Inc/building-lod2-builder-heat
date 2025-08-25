@@ -1,17 +1,17 @@
-import math
-import sys
 from pathlib import Path
 
 import laspy
+import math
 import numpy as np
+import sys
 from laspy import LasData
 from numpy.typing import NDArray
 from pyproj import CRS
 from shapely import Point
 
-from building_lod2_builder_heat.bounds import GeoBounds
-from building_lod2_builder_heat.outline import GeoOutline
-from building_lod2_builder_heat.parameter import load_dsm_crs_from_json
+from building_lod2_builder_heat.commands.infer.bounds import GeoBounds
+from building_lod2_builder_heat.commands.infer.outline import GeoOutline
+from building_lod2_builder_heat.commands.infer.parameter import load_dsm_crs_from_json
 
 
 def load_dsm(
