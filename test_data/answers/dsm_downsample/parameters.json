@@ -1,5 +1,5 @@
 {
-  "roof_corners": [
+  "roofline_corners": [
     [
       38,
       44
@@ -153,7 +153,7 @@
       204
     ]
   ],
-  "roof_edges": [
+  "roofline_edges": [
     [
       4,
       12
@@ -335,18 +335,18 @@
       8
     ]
   ],
-  "roof_canvas_size": 256,
-  "roof_image_bounds": [
+  "roofline_extraction_input_canvas_size": 256,
+  "roofline_extraction_input_image_bounds": [
     0,
-    44,
+    211,
     256,
-    211
+    44
   ],
-  "roof_geo_bounds": [
+  "roofline_extraction_input_geo_bounds": [
     -76822.32,
     34064.24,
     -76795.44,
     34046.64
   ],
-  "roof_crs": "EPSG:6675"
+  "crs": "EPSG:6675"
 }

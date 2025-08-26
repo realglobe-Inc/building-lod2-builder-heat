@@ -182,4 +182,11 @@ config/secrets.json
 *.secret
 
 *.pth
-intermediate/
+
+!/test_data/**
+
+# 出力ディレクトリ
+output/
+results/
+generated/
+byproduct/

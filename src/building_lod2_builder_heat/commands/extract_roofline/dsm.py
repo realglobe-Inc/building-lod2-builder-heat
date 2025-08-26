@@ -1,17 +1,15 @@
+import math
 from pathlib import Path
 
 import laspy
-import math
 import numpy as np
-import sys
 from laspy import LasData
 from numpy.typing import NDArray
 from pyproj import CRS
 from shapely import Point
 
-from building_lod2_builder_heat.commands.infer.bounds import GeoBounds
-from building_lod2_builder_heat.commands.infer.outline import GeoOutline
-from building_lod2_builder_heat.commands.infer.parameter import load_dsm_crs_from_json
+from building_lod2_builder_heat.commands.extract_roofline.bounds import GeoBounds
+from building_lod2_builder_heat.commands.extract_roofline.outline import GeoOutline
 
 
 def load_dsm(
@@ -20,22 +18,18 @@ def load_dsm(
     max_factor: float = 4.0,
     outline: GeoOutline | None = None,
     canvas_bounds: GeoBounds | None = None,
-) -> tuple[NDArray[np.uint8] | None, NDArray[np.uint8] | None, GeoBounds | None]:
+    default_crs: CRS | None = None,
+) -> tuple[NDArray[np.uint8], NDArray[np.uint8], GeoBounds]:
     """
     DSMから画像と深度を読み込む。
 
     :param las_file_path: 読み込むDSMのファイルパス。
-    :type las_file_path: Path
     :param canvas_size: 出力画像を収める最大サイズ。
-    :type canvas_size: tuple[int, int]
     :param max_factor: 拡大時の最大倍率。
-    :type max_factor: float
     :param outline: 拡大する際に対象物の輪郭を保つための補助とする対象物の外形線。
-    :type outline: GeoOutline | None
     :param canvas_bounds: 出力に収める座標範囲。
-    :type canvas_bounds: GeoBounds | None
-    :returns: DSMから抽出したカラー画像と深度画像と座標範囲。
-    :rtype: tuple[NDArray[np.uint8] | None, NDArray[np.uint8] | None, GeoBounds | None]
+    :param default_crs: DSMファイル自体に座標系が記されていない場合に想定する座標系。
+    :return: DSMから抽出したカラー画像と深度画像と座標範囲。
     """
     min_z_range = 10
 
@@ -44,10 +38,9 @@ def load_dsm(
         las_data = las.read()
     crs: CRS | None = las_data.header.parse_crs()
     if crs is None:
-        crs = load_dsm_crs_from_json(las_file_path.with_suffix(".json"))
+        crs = default_crs
     if crs is None:
-        print(f"DSMの座標系を特定できませんでした", file=sys.stderr)
-        return None, None, None
+        raise ValueError(f"{las_file_path}の座標系が不明です")
 
     if outline is not None:
         outline = outline.transform_to(crs)
@@ -199,13 +192,11 @@ def _points_to_grid(
     存在しない場合は格子点はNoneになります。
 
     :param points: 3つの値（x座標とy座標とz座標）を持つ点の配列。
-    :type points: np.ndarray
-    :returns:
+    :return:
         - 行と列がそれぞれ入力点群のどの位置かを示す配列。
           この配列をあとすると、xがi番目、yがj番目の点はpoints[a[j,i]]
         - ソートされたx値の列。
         - ソートされたy値の列。
-    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
     """
     # X座標とY座標の一意な値を取得
     unique_x = np.unique(points[:, 0])

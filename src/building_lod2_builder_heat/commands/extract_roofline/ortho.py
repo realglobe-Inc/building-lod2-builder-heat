@@ -2,14 +2,13 @@ from pathlib import Path
 
 import numpy as np
 import rasterio
-import sys
 from numpy.typing import NDArray
 from rasterio import MemoryFile
 from rasterio.enums import Resampling
 from rasterio.mask import mask
 
-from building_lod2_builder_heat.commands.infer.bounds import GeoBounds
-from building_lod2_builder_heat.commands.infer.outline import GeoOutline
+from building_lod2_builder_heat.commands.extract_roofline.bounds import GeoBounds
+from building_lod2_builder_heat.commands.extract_roofline.outline import GeoOutline
 
 
 def load_ortho(
@@ -17,7 +16,8 @@ def load_ortho(
     canvas_size: tuple[int, int],
     max_factor: float = 4.0,
     outline: GeoOutline | None = None,
-) -> tuple[NDArray[np.uint8] | None, GeoBounds | None]:
+    default_crs: str | None = None,
+) -> tuple[NDArray[np.uint8], GeoBounds]:
     """
     オルソ画像を読み込む。
 
@@ -34,15 +34,11 @@ def load_ortho(
     outlineに沿ってジャギーの発生を抑制します。
 
     :param ortho_file_path: 読み込むオルソ画像のファイルパス。
-    :type ortho_file_path: Path
     :param canvas_size: 出力画像を収める最大サイズ。
-    :type canvas_size: tuple[int, int]
     :param max_factor: 拡大時の最大倍率。
-    :type max_factor: float
     :param outline: 拡大する際に対象物の輪郭を保つための補助とする対象物の外形線。
-    :type outline: GeoOutline | None
-    :returns: 処理を経たオルソ画像と座標範囲。
-    :rtype: tuple[NDArray[np.uint8] | None, GeoBounds | None]
+    :param default_crs: デフォルトの座標系。
+    :return: 処理を経たオルソ画像と座標範囲。
     """
     with rasterio.open(ortho_file_path) as ortho:
         # 画像のサイズを取得する
@@ -51,9 +47,10 @@ def load_ortho(
 
         # CRSと範囲を取得します
         crs = ortho.crs
+        if crs is None:
+            crs = default_crs
         if not crs:
-            print(f"{ortho_file_path}の座標系が不明です", file=sys.stderr)
-            return None, None
+            raise ValueError(f"{ortho_file_path}の座標系が不明です")
         outline = outline.transform_to(crs) if outline else None
         geo_bounds = GeoBounds(
             ortho.bounds.left,
