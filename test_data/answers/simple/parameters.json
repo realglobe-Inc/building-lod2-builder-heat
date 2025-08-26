@@ -262,19 +262,5 @@
       1,
       8
     ]
-  ],
-  "roofline_extraction_input_canvas_size": 256,
-  "roofline_extraction_input_image_bounds": [
-    0,
-    214,
-    256,
-    42
-  ],
-  "roofline_extraction_input_geo_bounds": [
-    -76823.2,
-    34065.12,
-    -76794.4,
-    34045.76
-  ],
-  "crs": "EPSG:6675"
+  ]
 }
