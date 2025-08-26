@@ -1,194 +1,135 @@
-# 建築物LOD2自動モデリングツールのHEAT
+# 建築物LOD2自動モデリングツール（HEAT ベース）
 
-建築物のLiDARデータと航空写真から、機械学習を用いて屋根の輪郭線を自動検出し、LOD2（Level of Detail 2）3Dモデリングに必要な屋根エッジ情報を抽出するツールです。
+建築物の屋根輪郭（ルーフライン）を機械学習で抽出し、LOD2（Level of Detail 2）モデリングに必要な屋根エッジ情報を得るための簡易 CLI ツールです。内部で HEAT ライブラリを利用して推論を行います。
+
+本リポジトリは簡素化されたワークフローに基づき、入力は RGB 画像と深度画像（PNG）を前提とします。LAS/OBJ の取り込みはこの縮小版 CLI では扱いません。
 
 ## 概要
 
-このツールは、以下の機能を提供します：
-
-- LASファイルとオルソ画像（航空写真）、OBJファイル（3Dメッシュモデル）との統合処理
-- HEATライブラリを使用した深層学習による屋根エッジ検出
-- 検出された屋根の角点座標と関連情報の出力
+- Typer 製 CLI「extract-roofline」の run サブコマンドを提供
+- HEAT の学習済みチェックポイント（.pth）をロードして屋根の角点と辺を検出
+- 出力は parameters.json。オプションで可視化 PNG を保存
 
 ## 必要な環境
 
-- Python 3.13以上
-- CUDA対応GPU（推奨、CPUでも動作可能予定）
+- Python: 3.13 系（pyproject: ">=3.13,<4"）
+- GPU: 任意（GPU 利用可なら既定で GPU を利用）
 
-## インストール
+HEAT/PyTorch に関する注意:
+- 依存 heat は Git ブランチ（2025-dev）から取得します（ネットワーク必須）。
+- 一部環境で torch/torchvision の解決に失敗する場合があります。その際は Poetry の venv に事前インストールしてください（CPU Wheels 例）:
+  ```bash
+  poetry run pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
+  poetry install
+  ```
+
+## インストール（Poetry）
 
 ```bash
 # リポジトリをクローン
 git clone <repository-url>
 cd building-lod2-builder-heat
 
-# 依存関係をインストール
+# Python 3.13 の venv を作成して依存を導入
+poetry env use 3.13
 poetry install
 ```
 
-## 使用方法
+## CLI 使用方法
 
-### コマンドライン実行
-
-```bash
-poetry run detect-roof-edges [OPTIONS] CHECKPOINT_FILE DSM_DIR OUTPUT_DIR
-```
-
-#### 引数
-
-- `CHECKPOINT_FILE`: 学習済みモデルファイルのパス（.pthファイル）
-- `DSM_DIR`: LASファイルが格納されているディレクトリ
-- `OUTPUT_DIR`: 検出結果を出力するディレクトリ
-
-#### オプション
-
-- `--ortho-dir PATH`: オルソ画像ファイルが格納されているディレクトリ（オプション）
-- `--obj-dir PATH`: OBJファイルが格納されているディレクトリ（オプション）
-- `--intermediate-dir PATH`: 中間生成物を保存するディレクトリ（オプション）
-- `--gpu/--cpu`: GPU使用の有無（デフォルト: GPU使用）
-- `--skip-exist/--overwrite`: 既に結果が存在する場合はスキップするかどうか（デフォルト: スキップ）
-
-### 実行例
+エントリポイント: extract-roofline（Typer アプリ）
 
 ```bash
-# 基本的な実行（DSMのみ）
-poetry run detect-roof-edges roof_edge_detection_parameter.pth data/dsm data/output
-
-# オルソ画像を使用した実行
-poetry run detect-roof-edges \
-  --ortho-dir data/ortho \
-  roof_edge_detection_parameter.pth \
-  data/dsm \
-  data/output
-
-# OBJファイルを使用した実行（外形線情報を利用）
-poetry run detect-roof-edges \
-  --obj-dir data/obj \
-  roof_edge_detection_parameter.pth \
-  data/dsm \
-  data/output
-
-# 全ての入力データと中間ファイル保存を含む実行
-poetry run detect-roof-edges \
-  --ortho-dir data/ortho \
-  --obj-dir data/obj \
-  --intermediate-dir data/intermediate \
-  roof_edge_detection_parameter.pth \
-  data/dsm \
-  data/output
-
-# 既存結果を上書きする実行
-poetry run detect-roof-edges \
-  --overwrite \
-  roof_edge_detection_parameter.pth \
-  data/dsm \
-  data/output
+poetry run extract-roofline run CHECKPOINT_FILE DATA_ROOT \
+  [--output-dir PATH] [--byproduct-dir PATH] \
+  [--prefer-gpu/--force-cpu] [--skip-exist/--overwrite] \
+  [--rich-error/--normal-error] [--exit-on-error]
 ```
 
-## データ形式
+- CHECKPOINT_FILE: HEAT 屋根エッジ検出チェックポイント（.pth）
+- DATA_ROOT: 入力データのルートディレクトリ。直下の各サブディレクトリを 1 対象として処理します
+- --output-dir PATH: 出力ルート（未指定時は DATA_ROOT 配下に出力）
+- --byproduct-dir PATH: 可視化 PNG を保存（デバッグ支援）
+- --prefer-gpu/--force-cpu: GPU 利用可なら GPU を使用するか（既定: prefer-gpu）
+- --skip-exist/--overwrite: 既存結果をスキップ/上書き（既定: スキップ）
+- --rich-error/--normal-error: Typer のリッチトレースバック切替（既定: rich）
+- --exit-on-error: 最初の対象エラーで停止
 
-### 入力データ
+### 実行例（CPU 強制）
 
-#### LASファイル
-- 形式: `.las`
-- 内容: DSM点群データ
-- 命名規則: `<任意のID>.las`
+```bash
+poetry run extract-roofline run roof_edge_detection_parameter.pth data/input_root \
+  --output-dir out/output_root \
+  --byproduct-dir out/byproduct_root \
+  --force-cpu
+```
 
-#### オルソ画像（オプション）
-- 形式: `.tif`
-- 内容: 航空写真のオルソ画像
-- 命名規則: `<LASファイルと同一のID>.tif`
+## データレイアウト（DATA_ROOT 配下）
 
-#### OBJファイル（オプション）
-- 形式: `.obj`
-- 内容: 3Dメッシュモデル（建物の外形線抽出に使用）
-- 命名規則: `<LASファイルと同一のID>.obj`
-- 付随ファイル: `<同一のID>.json`（座標系情報を含む）
+各対象サブディレクトリ直下に以下のファイル名で配置してください（src/.../common/file_names.py 参照）。
 
-### 出力データ
+必須:
+- roofline_extraction_input_rgb.png  （RGB 画像）
+- roofline_extraction_input_depth.png（深度画像）
 
-#### 屋根エッジ検出結果
-- 形式: `.json`
-- 内容: 検出された屋根の角点座標と関連情報
-- 構造:
+出力（対象ごと）:
+- parameters.json
+- --byproduct-dir 指定時:
+  - roofline_extraction_result_rgb.png
+  - roofline_extraction_result_depth.png
+
+例:
+```
+DATA_ROOT/
+  simple/
+    roofline_extraction_input_rgb.png
+    roofline_extraction_input_depth.png
+  complex/
+    roofline_extraction_input_rgb.png
+    roofline_extraction_input_depth.png
+```
+
+## 出力フォーマット（parameters.json）
+
+最低限、以下のキーを出力します。
 ```json
 {
-   "roof_corners": [
-      [39, 44],
-      [71, 59],
-      [19, 65]
-   ],
-   "roof_edges": [
-      [0, 1],
-      [1, 2],
-      [2, 3]
-   ],
-   "roof_canvas_size": 256,
-   "roof_image_bounds": [64, 32, 192, 224],
-   "roof_geo_bounds": [139.123, 35.456, 139.789, 35.987],
-   "roof_crs": "EPSG:6677"
+  "roofline_corners": [[10, 20], [30, 40]],
+  "roofline_edges": [[0, 1]]
 }
 ```
 
-### 中間生成物（オプション）
+## HEAT モデル/推論のポイント
 
-処理過程で以下のファイルが生成されます：
+- HEAT を HEAT(force_cpu=not prefer_gpu) で初期化し、GPU を優先利用
+- HEAT.load_checkpoint の戻り値からキャンバスサイズを推定（None の場合は既定 256）
+- 入力は BGR 順で推論: model.infer(input_rgb[:, :, [2, 1, 0]])
 
-- `ortho.png`: オルソ画像の入力データ（オルソ画像使用時）
-- `dsm_rgb.png`: DSMのRGB可視化画像
-- `dsm_depth.png`: DSMの深度画像
-- `padded_rgb.png`: パディング処理されたRGB画像
-- `padded_depth.png`: パディング処理された深度画像
-- `result.png`: 検出された屋根エッジと角点の可視化画像
+## テスト
 
-## 技術仕様
+統合テスト（HEAT/チェックポイントが必要）:
+```bash
+# 事前に heat/torch が解決できる環境を用意してください
+poetry run pytest -q -m integration
+# 単一テスト
+poetry run pytest -q tests/test_main.py::TestRunIntegration::test_all -m integration
+```
+前提:
+- heat がインストール済み（poetry install 経由）
+- チェックポイント roof_edge_detection_parameter.pth がプロジェクトルートまたは test_data/ に存在（無ければテストがダウンロードを試行）
 
-### 主要な依存関係
+## トラブルシューティング / デバッグ
 
-- **laspy**: LASファイルの読み込み・処理
-- **numpy**: 数値計算
-- **opencv-python**: 画像処理
-- **pyproj**: 座標変換
-- **rasterio**: ラスターデータ処理
-- **shapely**: 幾何学的図形処理
-- **typer**: コマンドラインインターフェース
-- **heat**: 屋根エッジ検出用深層学習ライブラリ
+- 可視化 PNG が必要な場合は --byproduct-dir を指定して確認
+- CUDA 無し環境では --force-cpu を使用
+- Typer のリッチエラーは --normal-error で無効化でき、その際 _TYPER_STANDARD_TRACEBACK=true が設定されます（標準トレースバック）
+- 入力取り込みに失敗する場合は、ファイル名が上記と一致しているか確認
 
-### 処理フロー
+## 既知の注意事項
 
-1. **データ読み込み**: LASファイルからポイントクラウドデータを読み込み
-2. **DSM生成**: ポイントクラウドからDSM（Digital Surface Model）を生成
-3. **画像前処理**: DSMデータを画像形式に変換し、必要に応じてパディング処理
-4. **エッジ検出**: HEATライブラリを使用して屋根エッジを検出
-5. **後処理**: 検出結果から角点座標を抽出
-6. **出力**: JSON形式で結果を保存
-
-## 開発者情報
-
-- **作者**: fukuchidaisuke
-- **所属**: realglobe.jp
-- **バージョン**: 0.1.0
+- 本リポジトリの CLI 名称は extract-roofline（run サブコマンド）です。旧名称 detect-roof-edges は使用しません
+- 将来的に OBJ/CRS を取り込む場合は、CRS 文字列（例: "EPSG:6677"）を含む JSON サイドカーの採用を検討
 
 ## ライセンス
 
-このプロジェクトは GNU General Public License v3.0 またはそれ以降のバージョン（GPL-3.0-or-later）の下でライセンスされています。
-
-依存関係である [HEAT](https://github.com/realglobe-Inc/heat) ライブラリが GPL ライセンスを使用しているため、このプロジェクトも GPL ライセンスを採用しています。
-
-詳細については [LICENSE](LICENSE) ファイルを参照してください。
-
-## トラブルシューティング
-
-### よくある問題
-
-1. **座標系の問題**
-   - 入力データの座標系が正しく設定されているか確認
-   - pyproj の CRS 設定を確認
-
-2. **ファイル形式エラー**
-   - LASファイルの形式とバージョンを確認
-   - ファイル名の命名規則を確認
-
-### ログとデバッグ
-
-処理中のログは標準出力に表示されます。詳細なデバッグ情報が必要な場合は、中間ディレクトリを指定して中間生成物を確認してください。
+GNU GPL v3.0 以降（GPL-3.0-or-later）。詳細は [LICENSE](LICENSE) を参照してください。
