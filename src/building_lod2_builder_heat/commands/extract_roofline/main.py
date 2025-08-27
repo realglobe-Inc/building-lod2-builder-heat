@@ -73,7 +73,7 @@ def run(
         rgb_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_RGB
         depth_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_DEPTH
         if not rgb_file_path.exists() or not depth_file_path.exists():
-            print(f"入力データが足りないため{target_id}をスキップします")
+            print(f"データが足りないため{target_id}をスキップします")
             continue
 
         output_dir_path = output_root_dir_path / target_id
