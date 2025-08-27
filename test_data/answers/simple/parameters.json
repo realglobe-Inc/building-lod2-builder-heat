@@ -1,5 +1,5 @@
 {
-  "roof_corners": [
+  "roofline_corners": [
     [
       44,
       49
@@ -117,7 +117,7 @@
       193
     ]
   ],
-  "roof_edges": [
+  "roofline_edges": [
     [
       18,
       23
@@ -262,19 +262,5 @@
       1,
       8
     ]
-  ],
-  "roof_canvas_size": 256,
-  "roof_image_bounds": [
-    0,
-    42,
-    256,
-    214
-  ],
-  "roof_geo_bounds": [
-    -76823.2,
-    34065.12,
-    -76794.4,
-    34045.76
-  ],
-  "roof_crs": "EPSG:6675"
+  ]
 }

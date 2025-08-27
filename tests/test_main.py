@@ -1,4 +1,5 @@
 import json
+import re
 import tempfile
 import urllib.request
 from pathlib import Path
@@ -7,7 +8,8 @@ from typing import Iterator
 import pytest
 from typer.testing import CliRunner
 
-from building_lod2_builder_heat.main import app
+from building_lod2_builder_heat.commands.extract_roofline.main import app
+from building_lod2_builder_heat.common import file_names
 
 
 class TestRunIntegration:
@@ -55,188 +57,49 @@ class TestRunIntegration:
         return CliRunner()
 
     @pytest.mark.integration
-    def test_run_dsm(
+    def test_all(
         self, runner, checkpoint_file, test_data_dir, answers_dir, temp_output_dir
     ):
-        """DSMだけの場合のテスト"""
-        dsm_dir = test_data_dir / "dsm"
-        expected_answers_dir = answers_dir / "dsm"
-
-        output_dir = temp_output_dir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        input_root_dir = test_data_dir / "input"
+        output_root_dir = temp_output_dir
 
         result = runner.invoke(
             app,
             [
                 str(checkpoint_file),
-                str(dsm_dir),
-                str(output_dir),
-                "--overwrite",
+                str(input_root_dir),
+                "--output-dir",
+                str(output_root_dir),
             ],
         )
 
-        assert result.exit_code == 0, f"コマンドが失敗しました: {result.output}"
+        input_dirs = list(input_root_dir.iterdir())
+        for input_dir in sorted(input_dirs):
+            err_msg = (input_dir.name, result.output)
 
-        for las_file in dsm_dir.glob("*.las"):
-            output_file = output_dir / f"{las_file.stem}.json"
-            expected_file = expected_answers_dir / f"{las_file.stem}.json"
+            output_dir = output_root_dir / input_dir.name
+            assert output_dir.exists(), err_msg
+            output_files = list(output_dir.iterdir())
+            output_file = output_dir / file_names.PARAMETERS
+            assert set(output_files) == {output_file}, err_msg
 
-            assert json.loads(output_file.read_text()) == json.loads(
-                expected_file.read_text()
+            expected_answers_dir = answers_dir / input_dir.name
+            expected_file = expected_answers_dir / output_file.name
+            assert_json_files_eq(
+                output_file, expected_file, err_msg, exclude=r".*_source_.*"
             )
 
-    @pytest.mark.integration
-    def test_run_dsm_ortho(
-        self,
-        runner: CliRunner,
-        checkpoint_file: Path,
-        test_data_dir: Path,
-        answers_dir: Path,
-        temp_output_dir: Path,
-    ):
-        """オルソ画像を追加した場合のテスト"""
-        dsm_dir = test_data_dir / "dsm"
-        ortho_dir = test_data_dir / "ortho_clipped"
-        expected_answers_dir = answers_dir / "dsm_ortho_clipped"
 
-        output_dir = temp_output_dir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        result = runner.invoke(
-            app,
-            [
-                str(checkpoint_file),
-                str(dsm_dir),
-                str(output_dir),
-                "--ortho-dir",
-                str(ortho_dir),
-                "--overwrite",
-            ],
-        )
-
-        assert result.exit_code == 0, f"コマンドが失敗しました: {result.output}"
-
-        for las_file in dsm_dir.glob("*.las"):
-            output_file = output_dir / f"{las_file.stem}.json"
-            expected_file = expected_answers_dir / f"{las_file.stem}.json"
-
-            assert json.loads(output_file.read_text()) == json.loads(
-                expected_file.read_text()
-            )
-
-    @pytest.mark.integration
-    def test_run_dsm_obj(
-        self,
-        runner: CliRunner,
-        checkpoint_file: Path,
-        test_data_dir: Path,
-        answers_dir: Path,
-        temp_output_dir: Path,
-    ):
-        """外形線を追加した場合のテスト"""
-        dsm_dir = test_data_dir / "dsm"
-        obj_dir = test_data_dir / "obj"
-        expected_answers_dir = answers_dir / "dsm_obj"
-
-        output_dir = temp_output_dir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        result = runner.invoke(
-            app,
-            [
-                str(checkpoint_file),
-                str(dsm_dir),
-                str(output_dir),
-                "--obj-dir",
-                str(obj_dir),
-                "--overwrite",
-            ],
-        )
-
-        assert result.exit_code == 0, f"コマンドが失敗しました: {result.output}"
-
-        for las_file in dsm_dir.glob("*.las"):
-            output_file = output_dir / f"{las_file.stem}.json"
-            expected_file = expected_answers_dir / f"{las_file.stem}.json"
-
-            assert json.loads(output_file.read_text()) == json.loads(
-                expected_file.read_text()
-            )
-
-    @pytest.mark.integration
-    def test_run_dsm_ortho_obj(
-        self,
-        runner: CliRunner,
-        checkpoint_file: Path,
-        test_data_dir: Path,
-        answers_dir: Path,
-        temp_output_dir: Path,
-    ):
-        """オルソ画像と外形線を追加した場合のテスト"""
-        dsm_dir = test_data_dir / "dsm"
-        ortho_dir = test_data_dir / "ortho"
-        obj_dir = test_data_dir / "obj"
-        expected_answers_dir = answers_dir / "dsm_ortho_obj"
-
-        output_dir = temp_output_dir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        result = runner.invoke(
-            app,
-            [
-                str(checkpoint_file),
-                str(dsm_dir),
-                str(output_dir),
-                "--ortho-dir",
-                str(ortho_dir),
-                "--obj-dir",
-                str(obj_dir),
-                "--overwrite",
-            ],
-        )
-
-        assert result.exit_code == 0, f"コマンドが失敗しました: {result.output}"
-
-        for las_file in dsm_dir.glob("*.las"):
-            output_file = output_dir / f"{las_file.stem}.json"
-            expected_file = expected_answers_dir / f"{las_file.stem}.json"
-
-            assert json.loads(output_file.read_text()) == json.loads(
-                expected_file.read_text()
-            )
-
-    @pytest.mark.integration
-    def test_run_downsample_dsm(
-        self,
-        runner: CliRunner,
-        checkpoint_file: Path,
-        test_data_dir: Path,
-        answers_dir: Path,
-        temp_output_dir: Path,
-    ):
-        """間引いたDSMの場合のテスト"""
-        dsm_dir = test_data_dir / "dsm_downsample"
-        expected_answers_dir = answers_dir / "dsm_downsample"
-
-        output_dir = temp_output_dir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        result = runner.invoke(
-            app,
-            [
-                str(checkpoint_file),
-                str(dsm_dir),
-                str(output_dir),
-                "--overwrite",
-            ],
-        )
-
-        assert result.exit_code == 0, f"コマンドが失敗しました: {result.output}"
-
-        for las_file in dsm_dir.glob("*.las"):
-            output_file = output_dir / f"{las_file.stem}.json"
-            expected_file = expected_answers_dir / f"{las_file.stem}.json"
-
-            assert json.loads(output_file.read_text()) == json.loads(
-                expected_file.read_text()
-            )
+def assert_json_files_eq(
+    actual_file: Path, expected_file: Path, err_msg: object, exclude: str = None
+):
+    with open(actual_file, "r") as f:
+        actual_json = json.load(f)
+    with open(expected_file, "r") as f:
+        expected_json = json.load(f)
+    if exclude:
+        actual_json = {k: v for k, v in actual_json.items() if not re.match(exclude, k)}
+        expected_json = {
+            k: v for k, v in expected_json.items() if not re.match(exclude, k)
+        }
+    assert actual_json == expected_json, err_msg
