@@ -26,12 +26,14 @@ def main_unit(
 
     print(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
 
-    output_file_path = output_dir_path / file_names.PARAMETERS
-    result_params = {
+    output_param_file_path = output_dir_path / file_names.PARAMETERS
+    params = {
         parameter_keys.ROOFLINE_CORNERS: corners.tolist(),
         parameter_keys.ROOFLINE_EDGES: edges.tolist(),
+        parameter_keys.ROOFLINE_EXTRACTION_SOURCE_RGB: str(rgb_file_path),
+        parameter_keys.ROOFLINE_EXTRACTION_SOURCE_DEPTH: str(depth_file_path),
     }
-    update_parameters(output_file_path, result_params)
+    update_parameters(output_param_file_path, params)
 
     # 結果画像を出力する
     if byproduct_dir_path is not None:
