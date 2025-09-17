@@ -17,7 +17,9 @@ app = typer.Typer()
 
 @app.command()
 def run(
-    checkpoint_file: Path = typer.Argument(help="学習済みモデルのパス。", exists=True),
+    checkpoint_file_path: Path = typer.Argument(
+        help="学習済みモデルのパス。", exists=True
+    ),
     data_root_dir_path: Path = typer.Argument(
         help=f"データディレクトリのパス。各サブディレクトリの以下のファイルが使われます。\n必須: {file_names.ROOFLINE_EXTRACTION_INPUT_RGB}, {file_names.ROOFLINE_EXTRACTION_INPUT_DEPTH}。\nオプション: なし。",
         exists=True,
@@ -56,11 +58,9 @@ def run(
     """
     os.environ["_TYPER_STANDARD_TRACEBACK"] = "" if rich_error else "true"
 
-    print(f"モデルをロードします: {checkpoint_file}")
+    print(f"モデルをロードします: {checkpoint_file_path}")
     model = HEAT(force_cpu=not prefer_gpu)
-    canvas_size = model.load_checkpoint(checkpoint_file)
-    if canvas_size is None:
-        canvas_size = 256
+    model.load_checkpoint(checkpoint_file_path)
 
     output_root_dir_path = (
         output_root_dir_path if output_root_dir_path is not None else data_root_dir_path
@@ -89,7 +89,7 @@ def run(
         print(f"{target_id}を処理します")
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
-        byproduct_dir_path = None
+        byproduct_dir_path: Path | None = None
         if byproduct_root_dir_path is not None:
             byproduct_dir_path = byproduct_root_dir_path / target_id
             byproduct_dir_path.mkdir(parents=True, exist_ok=True)
