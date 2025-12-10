@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -17,6 +18,7 @@ def main_unit(
     model: HEAT,
     output_dir_path: Path,
     byproduct_dir_path: Path | None = None,
+    backup: bool = False,
 ):
     input_rgb = np.array(Image.open(rgb_file_path))
     input_depth = np.array(Image.open(depth_file_path))
@@ -27,6 +29,8 @@ def main_unit(
     print(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
 
     output_param_file_path = output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT
+    if backup:
+        _backup_file(output_param_file_path)
     params = {
         parameter_keys.ROOFLINE_CORNERS: corners.tolist(),
         parameter_keys.ROOFLINE_EDGES: edges.tolist(),
@@ -37,16 +41,17 @@ def main_unit(
 
     # 結果画像を出力する
     if byproduct_dir_path is not None:
+        rgb_out = byproduct_dir_path / file_names.ROOFLINE_EXTRACTION_RESULT_RGB
+        depth_out = byproduct_dir_path / file_names.ROOFLINE_EXTRACTION_RESULT_DEPTH
+        if backup:
+            _backup_file(rgb_out)
+            _backup_file(depth_out)
         visualized_rgb = _visualize_detection_results(input_rgb, corners, edges)
-        Image.fromarray(visualized_rgb).save(
-            byproduct_dir_path / file_names.ROOFLINE_EXTRACTION_RESULT_RGB
-        )
+        Image.fromarray(visualized_rgb).save(rgb_out)
         visualized_depth = _visualize_detection_results(
             np.array(Image.fromarray(input_depth).convert("RGB")), corners, edges
         )
-        Image.fromarray(visualized_depth).save(
-            byproduct_dir_path / file_names.ROOFLINE_EXTRACTION_RESULT_DEPTH
-        )
+        Image.fromarray(visualized_depth).save(depth_out)
 
 
 def _visualize_detection_results(
@@ -79,3 +84,20 @@ def _visualize_detection_results(
         draw.ellipse([x - d, y - d, x + d, y + d], fill=(0, 0, 255))
 
     return np.array(pil_image)
+
+
+def _backup_file(file_path: Path):
+    """
+    file_pathとしてファイルを保存する前に、
+    同じファイル名があったら古いファイルをバックアップする
+    """
+    if not file_path.exists():
+        return
+    date_tag = datetime.now().strftime("%Y-%m-%d")
+    i = 0
+    while True:
+        backup_file_path = file_path.with_stem(f"{file_path.stem}_{date_tag}.{i}")
+        if not backup_file_path.exists():
+            file_path.rename(backup_file_path)
+            return
+        i += 1

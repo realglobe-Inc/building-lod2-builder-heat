@@ -43,6 +43,11 @@ def run(
         "--skip-exist/--overwrite",
         help="既に結果が存在する場合はスキップするかどうか。",
     ),
+    backup: bool = typer.Option(
+        False,
+        "--backup",
+        help="出力ファイルが既に存在する場合にバックアップを作成する。",
+    ),
     rich_error: bool = typer.Option(
         True,
         "--rich-error/--normal-error",
@@ -102,6 +107,7 @@ def run(
                 model=model,
                 output_dir_path=output_dir_path,
                 byproduct_dir_path=byproduct_dir_path,
+                backup=backup,
             )
         except Exception as e:
             print(f"{target_id}の処理に失敗しました", file=sys.stderr)
