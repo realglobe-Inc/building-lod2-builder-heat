@@ -10,6 +10,7 @@ from building_lod2_builder_heat.commands.extract_roofline.main_unit import main_
 from building_lod2_builder_heat.common import file_names, parameter_keys
 from building_lod2_builder_heat.common.parameter import (
     load_parameter,
+    update_parameters,
 )
 
 app = typer.Typer()
@@ -77,7 +78,7 @@ def run(
             continue
 
         output_dir_path = output_root_dir_path / target_id
-        output_file_path = output_dir_path / file_names.PARAMETERS
+        output_file_path = output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT
         if (
             skip_exist
             and load_parameter(output_file_path, parameter_keys.ROOFLINE_EDGES)
@@ -102,11 +103,16 @@ def run(
                 output_dir_path=output_dir_path,
                 byproduct_dir_path=byproduct_dir_path,
             )
-        except Exception:
+        except Exception as e:
             print(f"{target_id}の処理に失敗しました", file=sys.stderr)
             if exit_on_error:
                 raise
+            tb = traceback.format_exc()
             traceback.print_exc()
+            update_parameters(
+                output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT,
+                {parameter_keys.ERROR: str(e), parameter_keys.TRACEBACK: tb},
+            )
             continue
 
 

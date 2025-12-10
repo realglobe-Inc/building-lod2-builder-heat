@@ -80,13 +80,13 @@ class TestRunIntegration:
             output_dir = output_root_dir / input_dir.name
             assert output_dir.exists(), err_msg
             output_files = list(output_dir.iterdir())
-            output_file = output_dir / file_names.PARAMETERS
+            output_file = output_dir / file_names.EXTRACT_ROOFLINE_OUTPUT
             assert set(output_files) == {output_file}, err_msg
 
             expected_answers_dir = answers_dir / input_dir.name
             expected_file = expected_answers_dir / output_file.name
             assert_json_files_eq(
-                output_file, expected_file, err_msg, exclude=r".*_source_.*"
+                output_file, expected_file, err_msg, exclude=r"^source_.*"
             )
 
 
