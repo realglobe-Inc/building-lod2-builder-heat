@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 from heat import HEAT
+from loguru import logger
 from numpy.typing import NDArray
 
 from building_lod2_builder_heat.common import file_names, parameter_keys
@@ -26,7 +27,7 @@ def main_unit(
     # TODO depthの利用
     corners, edges = model.infer(input_rgb[:, :, [2, 1, 0]])  # RGB -> BGR
 
-    print(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
+    logger.info(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
 
     output_param_file_path = output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT
     if backup:

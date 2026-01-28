@@ -1,13 +1,14 @@
 import os
-import sys
 import traceback
 from pathlib import Path
 
 import typer
 from heat import HEAT
+from loguru import logger
 
 from building_lod2_builder_heat.commands.extract_roofline.main_unit import main_unit
 from building_lod2_builder_heat.common import file_names, parameter_keys
+from building_lod2_builder_heat.common.logging import LogLevel, setup_logger
 from building_lod2_builder_heat.common.parameter import (
     load_parameter,
     update_parameters,
@@ -58,13 +59,25 @@ def run(
         "--exit-on-error",
         help="1つの処理対象に対するエラーで終了する。",
     ),
+    log_level: LogLevel = typer.Option(
+        LogLevel.INFO,
+        "--log-level",
+        help="ログレベルを指定します。",
+        case_sensitive=False,
+    ),
+    log_file: Path | None = typer.Option(
+        None,
+        "--log-file",
+        help="ログファイルの出力先パス。",
+    ),
 ):
     """
     屋根線を抽出する。
     """
+    setup_logger(log_level, log_file)
     os.environ["_TYPER_STANDARD_TRACEBACK"] = "" if rich_error else "true"
 
-    print(f"モデルをロードします: {checkpoint_file_path}")
+    logger.info(f"モデルをロードします: {checkpoint_file_path}")
     model = HEAT(force_cpu=not prefer_gpu)
     model.load_checkpoint(checkpoint_file_path)
 
@@ -79,7 +92,7 @@ def run(
         rgb_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_RGB
         depth_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_DEPTH
         if not rgb_file_path.exists() or not depth_file_path.exists():
-            print(f"データが足りないため{target_id}をスキップします")
+            logger.info(f"データが足りないため{target_id}をスキップします")
             continue
 
         output_dir_path = output_root_dir_path / target_id
@@ -89,10 +102,10 @@ def run(
             and load_parameter(output_file_path, parameter_keys.ROOFLINE_EDGES)
             is not None
         ):
-            print(f"{target_id}をスキップします")
+            logger.info(f"{target_id}をスキップします")
             continue
 
-        print(f"{target_id}を処理します")
+        logger.info(f"{target_id}を処理します")
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
         byproduct_dir_path: Path | None = None
@@ -110,17 +123,12 @@ def run(
                 backup=backup,
             )
         except Exception as e:
-            print(f"{target_id}の処理に失敗しました", file=sys.stderr)
+            logger.error(f"{target_id}の処理に失敗しました")
             if exit_on_error:
                 raise
             tb = traceback.format_exc()
-            traceback.print_exc()
+            logger.exception(e)
             update_parameters(
                 output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT,
                 {parameter_keys.ERROR: str(e), parameter_keys.TRACEBACK: tb},
             )
-            continue
-
-
-if __name__ == "__main__":
-    app()

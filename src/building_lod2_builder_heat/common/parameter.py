@@ -1,7 +1,8 @@
 import json
-import sys
 from json import JSONDecodeError
 from pathlib import Path
+
+from loguru import logger
 
 
 def load_parameter(param_file_path: Path, key: str) -> object:
@@ -29,9 +30,8 @@ def update_parameters(param_file_path: Path, params: dict, overwrite: bool = Fal
                 old.update(params)
                 params = old
         except JSONDecodeError as e:
-            print(
+            logger.info(
                 f"{param_file_path}をJSONとして読み込めなかったため、全体を上書きします: {e}",
-                file=sys.stderr,
             )
             param_file_path.unlink()
 
