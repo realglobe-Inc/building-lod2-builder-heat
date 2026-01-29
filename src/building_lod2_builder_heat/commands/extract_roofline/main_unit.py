@@ -2,15 +2,13 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
 from heat import HEAT
 from loguru import logger
 from numpy.typing import NDArray
+from PIL import Image, ImageDraw
 
 from building_lod2_builder_heat.common import file_names, parameter_keys
-from building_lod2_builder_heat.common.parameter import (
-    update_parameters,
-)
+from building_lod2_builder_heat.common.parameter import update_parameters
 
 
 def main_unit(
@@ -53,6 +51,8 @@ def main_unit(
             np.array(Image.fromarray(input_depth).convert("RGB")), corners, edges
         )
         Image.fromarray(visualized_depth).save(depth_out)
+
+    logger.info(f"{output_dir_path}に保存しました")
 
 
 def _visualize_detection_results(

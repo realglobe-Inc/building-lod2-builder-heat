@@ -7,7 +7,7 @@ from loguru import logger
 
 def load_parameter(param_file_path: Path, key: str) -> object:
     try:
-        with open(param_file_path, "r", encoding="utf-8") as f:
+        with open(param_file_path, encoding="utf-8") as f:
             json_data = json.load(f)
             return json_data.get(key)
     except (FileNotFoundError, JSONDecodeError):
@@ -25,7 +25,7 @@ def update_parameters(param_file_path: Path, params: dict, overwrite: bool = Fal
     # 既存のデータを読み込み
     if not overwrite and param_file_path.exists():
         try:
-            with open(param_file_path, "r", encoding="utf-8") as f:
+            with open(param_file_path, encoding="utf-8") as f:
                 old = json.load(f)
                 old.update(params)
                 params = old

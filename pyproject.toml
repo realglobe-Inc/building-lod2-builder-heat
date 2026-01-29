@@ -3,10 +3,10 @@ name = "building_lod2_builder_heat"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "fukuchidaisuke",email = "fukuchidaisuke@realglobe.jp"}
+    { name = "fukuchidaisuke", email = "fukuchidaisuke@realglobe.jp" }
 ]
 readme = "README.md"
-license = {text = "GPL-3.0-or-later"}
+license = { text = "GPL-3.0-or-later" }
 requires-python = ">=3.13,<3.15"
 dependencies = [
     "loguru (>=0.7.3,<0.8.0)",
@@ -15,8 +15,8 @@ dependencies = [
     "typer[all] (>=0.21.1,<0.22.0)",
     # 詳細は下で
     "heat",
-    "torch",
-    "torchvision",
+    "torch (>=2.10.0,<3.0.0)",
+    "torchvision (>=0.25.0,<0.26.0)",
 ]
 
 
@@ -34,20 +34,30 @@ extract-roofline = "building_lod2_builder_heat.commands.extract_roofline.main:ap
 where = ["src"]
 
 [tool.poetry.group.dev.dependencies]
-black = "^26.1.0"
 pytest = "^9.0.2"
+ruff = "^0.14.14"
 
 [tool.pytest.ini_options]
 markers = [
     "integration: marks tests as integration tests",
 ]
 
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
 [tool.ruff.lint]
-select = ["TID"]
-#ignore = ["E501"]
+select = ["E", "F", "I", "W", "B", "C4", "SIM", "UP", "N", "TID"]
+ignore = []
+
 [tool.ruff.lint.flake8-tidy-imports]
-# 全ての相対インポートを禁止して検出
 ban-relative-imports = "all"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 # CUDA 13.0対応
 [[tool.poetry.source]]
@@ -57,5 +67,5 @@ priority = "explicit"
 
 [tool.poetry.dependencies]
 heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "2025-dev" }
-torch = { version = ">=2.10.0", source = "pytorch_cu130" }
-torchvision = { version = ">=0.25.0", source = "pytorch_cu130" }
+torch = { version = "^2.10.0", source = "pytorch_cu130" }
+torchvision = { version = "^0.25.0", source = "pytorch_cu130" }
