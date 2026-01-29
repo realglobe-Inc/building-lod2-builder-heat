@@ -9,11 +9,14 @@ readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 requires-python = ">=3.13,<3.15"
 dependencies = [
-    "heat @ git+https://github.com/realglobe-Inc/heat.git@2025-dev",
     "loguru (>=0.7.3,<0.8.0)",
     "numpy (>=2.4.1,<3.0.0)",
     "pillow (>=12.1.0,<13.0.0)",
     "typer[all] (>=0.21.1,<0.22.0)",
+    # 詳細は下で
+    "heat",
+    "torch",
+    "torchvision",
 ]
 
 
@@ -45,3 +48,14 @@ select = ["TID"]
 [tool.ruff.lint.flake8-tidy-imports]
 # 全ての相対インポートを禁止して検出
 ban-relative-imports = "all"
+
+# CUDA 13.0対応
+[[tool.poetry.source]]
+name = "pytorch_cu130"
+url = "https://download.pytorch.org/whl/cu130"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "2025-dev" }
+torch = { version = ">=2.10.0", source = "pytorch_cu130" }
+torchvision = { version = ">=0.25.0", source = "pytorch_cu130" }
