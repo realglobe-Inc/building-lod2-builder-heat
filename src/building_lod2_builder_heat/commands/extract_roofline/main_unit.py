@@ -19,8 +19,10 @@ def main_unit(
     byproduct_dir_path: Path | None = None,
     backup: bool = False,
 ):
-    input_rgb = np.array(Image.open(rgb_file_path))
-    input_depth = np.array(Image.open(depth_file_path))
+    with Image.open(rgb_file_path) as img:
+        input_rgb = np.array(img)
+    with Image.open(depth_file_path) as img:
+        input_depth = np.array(img)
 
     # TODO depthの利用
     corners, edges = model.infer(input_rgb[:, :, [2, 1, 0]])  # RGB -> BGR
