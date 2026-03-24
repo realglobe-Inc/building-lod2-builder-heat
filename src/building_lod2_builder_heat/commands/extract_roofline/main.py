@@ -77,7 +77,7 @@ def run(
     setup_logger(log_level, log_file)
     os.environ["_TYPER_STANDARD_TRACEBACK"] = "" if rich_error else "true"
 
-    logger.info(f"モデルをロードします: {checkpoint_file_path}")
+    logger.info(f"{checkpoint_file_path} をロードします")
     model = HEAT(force_cpu=not prefer_gpu)
     model.load_checkpoint(checkpoint_file_path)
 
@@ -92,7 +92,7 @@ def run(
         rgb_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_RGB
         depth_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_DEPTH
         if not rgb_file_path.exists() or not depth_file_path.exists():
-            logger.info(f"データが足りないため{target_id}をスキップします")
+            logger.info(f"データが足りないため {target_id} をスキップします")
             continue
 
         output_dir_path = output_root_dir_path / target_id
@@ -102,10 +102,10 @@ def run(
             and load_parameter(output_file_path, parameter_keys.ROOFLINE_EDGES)
             is not None
         ):
-            logger.info(f"{target_id}をスキップします")
+            logger.info(f"{target_id} をスキップします")
             continue
 
-        logger.info(f"{target_id}を処理します")
+        logger.info(f"{target_id} を処理します")
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
         byproduct_dir_path: Path | None = None
@@ -123,7 +123,7 @@ def run(
                 backup=backup,
             )
         except Exception as e:
-            logger.error(f"{target_id}の処理に失敗しました")
+            logger.error(f"{target_id} の処理に失敗しました")
             if exit_on_error:
                 raise
             tb = traceback.format_exc()

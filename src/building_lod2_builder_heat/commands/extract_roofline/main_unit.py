@@ -25,7 +25,7 @@ def main_unit(
     # TODO depthの利用
     corners, edges = model.infer(input_rgb[:, :, [2, 1, 0]])  # RGB -> BGR
 
-    logger.info(f"検出結果: {len(corners)}個の角 {len(edges)}個の辺")
+    logger.debug(f"{len(corners)}個の角、{len(edges)}個の辺を検出しました")
 
     output_param_file_path = output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT
     if backup:
@@ -52,7 +52,7 @@ def main_unit(
         )
         Image.fromarray(visualized_depth).save(depth_out)
 
-    logger.info(f"{output_dir_path}に保存しました")
+    logger.info(f"{output_dir_path} に出力しました")
 
 
 def _visualize_detection_results(
