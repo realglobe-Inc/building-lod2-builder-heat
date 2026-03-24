@@ -81,6 +81,8 @@ def run(
     model = HEAT(force_cpu=not prefer_gpu)
     model.load_checkpoint(checkpoint_file_path)
 
+    logger.debug(f"演算デバイス: {model.device}")
+
     output_root_dir_path = (
         output_root_dir_path if output_root_dir_path is not None else data_root_dir_path
     )
