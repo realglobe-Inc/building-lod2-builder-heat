@@ -32,7 +32,7 @@ where = ["src"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"
-ruff = "^0.15.7"
+ruff = "^0.15.8"
 
 [tool.pytest.ini_options]
 markers = [
@@ -58,4 +58,4 @@ line-ending = "auto"
 
 
 [tool.poetry.dependencies]
-heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "2025-dev" }
+heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "batch" }

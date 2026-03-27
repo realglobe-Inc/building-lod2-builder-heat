@@ -89,30 +89,30 @@ def run(
 
     input_dir_paths = [p for p in data_root_dir_path.iterdir() if p.is_dir()]
     for input_dir_path in sorted(input_dir_paths):
-        target_id = input_dir_path.stem
+        building_id = input_dir_path.stem
 
         rgb_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_RGB
         depth_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_DEPTH
         if not rgb_file_path.exists() or not depth_file_path.exists():
-            logger.info(f"データが足りないため {target_id} をスキップします")
+            logger.info(f"データが足りないため {building_id} をスキップします")
             continue
 
-        output_dir_path = output_root_dir_path / target_id
-        output_file_path = output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT
+        output_dir_path = output_root_dir_path / building_id
+        output_params_file_path = output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT
         if (
             skip_exist
-            and load_parameter(output_file_path, parameter_keys.ROOFLINE_EDGES)
+            and load_parameter(output_params_file_path, parameter_keys.ROOFLINE_EDGES)
             is not None
         ):
-            logger.info(f"{target_id} をスキップします")
+            logger.info(f"{building_id} をスキップします")
             continue
 
-        logger.info(f"{target_id} を処理します")
+        logger.info(f"{building_id} を処理します")
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
         byproduct_dir_path: Path | None = None
         if byproduct_root_dir_path is not None:
-            byproduct_dir_path = byproduct_root_dir_path / target_id
+            byproduct_dir_path = byproduct_root_dir_path / building_id
             byproduct_dir_path.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -125,7 +125,7 @@ def run(
                 backup=backup,
             )
         except Exception as e:
-            logger.error(f"{target_id} の処理に失敗しました")
+            logger.error(f"{building_id} の処理に失敗しました")
             if exit_on_error:
                 raise
             tb = traceback.format_exc()
