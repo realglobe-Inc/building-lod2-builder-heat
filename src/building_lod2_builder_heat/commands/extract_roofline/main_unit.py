@@ -18,7 +18,17 @@ def main_unit(
     output_dir_path: Path,
     byproduct_dir_path: Path | None = None,
     backup: bool = False,
-):
+) -> None:
+    """
+    1枚の画像に対して屋根線を抽出し、結果を保存する。
+
+    :param rgb_file_path: RGB画像のパス。
+    :param depth_file_path: Depth画像のパス。
+    :param model: 推論に使用するモデル。
+    :param output_dir_path: 出力先ディレクトリ。
+    :param byproduct_dir_path: 副産物（可視化画像）の出力先ディレクトリ。
+    :param backup: 既に結果が存在する場合にバックアップを作成するかどうか。
+    """
     with Image.open(rgb_file_path) as img:
         input_rgb = np.array(img)
     with Image.open(depth_file_path) as img:
@@ -27,6 +37,43 @@ def main_unit(
     # TODO depthの利用
     corners, edges = model.infer(input_rgb[:, :, [2, 1, 0]])  # RGB -> BGR
 
+    save_roofline_result(
+        corners=corners,
+        edges=edges,
+        rgb_file_path=rgb_file_path,
+        depth_file_path=depth_file_path,
+        input_rgb=input_rgb,
+        input_depth=input_depth,
+        output_dir_path=output_dir_path,
+        byproduct_dir_path=byproduct_dir_path,
+        backup=backup,
+    )
+
+
+def save_roofline_result(
+    corners: NDArray[np.float64],
+    edges: NDArray[np.int32],
+    rgb_file_path: Path,
+    depth_file_path: Path,
+    input_rgb: NDArray[np.uint8],
+    input_depth: NDArray[np.uint8],
+    output_dir_path: Path,
+    byproduct_dir_path: Path | None = None,
+    backup: bool = False,
+) -> None:
+    """
+    推論結果をファイルに保存し、必要に応じて可視化画像を出力する。
+
+    :param corners: 推論されたコーナー座標。
+    :param edges: 推論されたエッジ。
+    :param rgb_file_path: 入力RGB画像のパス（メタデータ用）。
+    :param depth_file_path: 入力Depth画像のパス（メタデータ用）。
+    :param input_rgb: 入力RGB画像データ。
+    :param input_depth: 入力Depth画像データ。
+    :param output_dir_path: 出力先ディレクトリ。
+    :param byproduct_dir_path: 副産物（可視化画像）の出力先ディレクトリ。
+    :param backup: 既に結果が存在する場合にバックアップを作成するかどうか。
+    """
     logger.debug(f"{len(corners)}個の角、{len(edges)}個の辺を検出しました")
 
     output_param_file_path = output_dir_path / file_names.EXTRACT_ROOFLINE_OUTPUT
@@ -58,7 +105,7 @@ def main_unit(
 
 
 def _visualize_detection_results(
-    image: NDArray[np.uint8], corners: NDArray[np.int32], edges: NDArray[np.int32]
+    image: NDArray[np.uint8], corners: NDArray[np.float64], edges: NDArray[np.int32]
 ) -> NDArray[np.uint8]:
     """
     検出結果の可視化画像を生成する。
