@@ -58,4 +58,4 @@ line-ending = "auto"
 
 
 [tool.poetry.dependencies]
-heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "batch" }
+heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "2025-dev" }
