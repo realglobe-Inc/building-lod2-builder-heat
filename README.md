@@ -69,24 +69,24 @@ poetry run extract-roofline roof_edge_detection_parameter.pth data/input_root \
 各対象サブディレクトリ直下に以下のファイル名で配置してください（src/.../common/file_names.py 参照）。
 
 必須:
-- roofline_extraction_input_rgb.png  （RGB 画像）
-- roofline_extraction_input_depth.png（深度画像）
+- extract_roofline_preprocess_result_rgb.png  （RGB 画像）
+- extract_roofline_preprocess_result_depth.png（深度画像）
 
 出力（対象ごと）:
 - extract_roofline.json
 - --byproduct-dir 指定時:
-  - roofline_extraction_result_rgb.png
-  - roofline_extraction_result_depth.png
+  - extract_roofline_result_rgb.png
+  - extract_roofline_result_depth.png
 
 例:
 ```
 DATA_ROOT/
   simple/
-    roofline_extraction_input_rgb.png
-    roofline_extraction_input_depth.png
+    extract_roofline_preprocess_result_rgb.png
+    extract_roofline_preprocess_result_depth.png
   complex/
-    roofline_extraction_input_rgb.png
-    roofline_extraction_input_depth.png
+    extract_roofline_preprocess_result_rgb.png
+    extract_roofline_preprocess_result_depth.png
 ```
 
 ## 出力フォーマット（extract_roofline.json）
