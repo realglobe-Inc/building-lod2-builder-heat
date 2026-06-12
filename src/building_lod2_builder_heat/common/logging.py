@@ -1,13 +1,19 @@
+from __future__ import annotations
+
 import logging
 import os
 import sys
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from loguru import logger
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
+    """
+    CLI で指定できるログレベル。
+    """
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -19,21 +25,17 @@ class InterceptHandler(logging.Handler):
     標準のロギング出力を loguru に転送するハンドラ。
     """
 
-    _LEVEL_MAP = {
-        "CRITICAL": "ERROR",
-        "ERROR": "WARNING",
-        "WARNING": "INFO",
-        "INFO": "DEBUG",
-        "DEBUG": "TRACE",
-    }
+    _LEVEL_MAP = {"CRITICAL": "CRITICAL"}
     _logging_file = os.path.normcase(logging.__file__)
 
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
         # 対応する loguru のレベルを取得
         level = self._LEVEL_MAP.get(record.levelname, record.levelname)
 
         # 呼び出し元の情報を特定
-        frame, depth = logging.currentframe().f_back, 2
+        current_frame = logging.currentframe()
+        frame = current_frame.f_back if current_frame is not None else None
+        depth = 2
         while frame:
             filename = os.path.normcase(frame.f_code.co_filename)
             # logging モジュール内部、またはこのハンドラ自身の中にいる間はさかのぼる
@@ -48,7 +50,7 @@ class InterceptHandler(logging.Handler):
         )
 
 
-def setup_logger(level: LogLevel, log_file: Path | None = None):
+def setup_logger(level: LogLevel, log_file: Path | None = None) -> None:
     """
     ロガーの初期化設定。
 
@@ -63,6 +65,7 @@ def setup_logger(level: LogLevel, log_file: Path | None = None):
 
     # ファイルへの出力設定（指定がある場合）
     if log_file:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
         logger.add(log_file, level="DEBUG", rotation="10 MB")
 
     # 標準の logging モジュールからの出力を loguru でキャプチャする

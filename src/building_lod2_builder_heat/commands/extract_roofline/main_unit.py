@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from pathlib import Path
 
@@ -7,6 +9,9 @@ from loguru import logger
 from numpy.typing import NDArray
 from PIL import Image, ImageDraw
 
+from building_lod2_builder_heat.commands.extract_roofline.dataset import (
+    load_roofline_images,
+)
 from building_lod2_builder_heat.common import file_names, parameter_keys
 from building_lod2_builder_heat.common.parameter import update_parameters
 
@@ -29,13 +34,12 @@ def main_unit(
     :param byproduct_dir_path: 副産物（可視化画像）の出力先ディレクトリ。
     :param backup: 既に結果が存在する場合にバックアップを作成するかどうか。
     """
-    with Image.open(rgb_file_path) as img:
-        input_rgb = np.array(img)
-    with Image.open(depth_file_path) as img:
-        input_depth = np.array(img)
+    input_rgb, input_depth = load_roofline_images(rgb_file_path, depth_file_path)
 
     # TODO depthの利用
-    corners, edges = model.infer(input_rgb[:, :, [2, 1, 0]])  # RGB -> BGR
+    corners, edges = model.infer(
+        np.ascontiguousarray(input_rgb[:, :, [2, 1, 0]])
+    )  # RGB -> BGR
 
     save_roofline_result(
         corners=corners,
@@ -56,7 +60,7 @@ def save_roofline_result(
     rgb_file_path: Path,
     depth_file_path: Path,
     input_rgb: NDArray[np.uint8],
-    input_depth: NDArray[np.uint8],
+    input_depth: NDArray[np.generic],
     output_dir_path: Path,
     byproduct_dir_path: Path | None = None,
     backup: bool = False,
@@ -136,10 +140,11 @@ def _visualize_detection_results(
     return np.array(pil_image)
 
 
-def _backup_file(file_path: Path):
+def _backup_file(file_path: Path) -> None:
     """
-    file_pathとしてファイルを保存する前に、
-    同じファイル名があったら古いファイルをバックアップする
+    file_path としてファイルを保存する前に既存ファイルをバックアップする。
+
+    :param file_path: バックアップ対象のファイルパス。
     """
     if not file_path.exists():
         return

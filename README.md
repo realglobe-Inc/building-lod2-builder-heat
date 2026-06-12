@@ -6,9 +6,9 @@
 
 ## 概要
 
-- Typer 製 CLI「extract-roofline」の run サブコマンドを提供
+- Typer 製 CLI「extract-roofline」を提供
 - HEAT の学習済みチェックポイント（.pth）をロードして屋根の角点と辺を検出
-- 出力は parameters.json。オプションで可視化 PNG を保存
+- 出力は extract_roofline.json。オプションで可視化 PNG を保存
 
 ## 必要な環境
 
@@ -40,7 +40,7 @@ poetry install
 エントリポイント: extract-roofline（Typer アプリ）
 
 ```bash
-poetry run extract-roofline run CHECKPOINT_FILE DATA_ROOT \
+poetry run extract-roofline CHECKPOINT_FILE DATA_ROOT \
   [--output-dir PATH] [--byproduct-dir PATH] \
   [--prefer-gpu/--force-cpu] [--skip-exist/--overwrite] \
   [--rich-error/--normal-error] [--exit-on-error]
@@ -58,7 +58,7 @@ poetry run extract-roofline run CHECKPOINT_FILE DATA_ROOT \
 ### 実行例（CPU 強制）
 
 ```bash
-poetry run extract-roofline run roof_edge_detection_parameter.pth data/input_root \
+poetry run extract-roofline roof_edge_detection_parameter.pth data/input_root \
   --output-dir out/output_root \
   --byproduct-dir out/byproduct_root \
   --force-cpu
@@ -73,7 +73,7 @@ poetry run extract-roofline run roof_edge_detection_parameter.pth data/input_roo
 - roofline_extraction_input_depth.png（深度画像）
 
 出力（対象ごと）:
-- parameters.json
+- extract_roofline.json
 - --byproduct-dir 指定時:
   - roofline_extraction_result_rgb.png
   - roofline_extraction_result_depth.png
@@ -89,7 +89,7 @@ DATA_ROOT/
     roofline_extraction_input_depth.png
 ```
 
-## 出力フォーマット（parameters.json）
+## 出力フォーマット（extract_roofline.json）
 
 最低限、以下のキーを出力します。
 ```json
@@ -102,7 +102,7 @@ DATA_ROOT/
 ## HEAT モデル/推論のポイント
 
 - HEAT を HEAT(force_cpu=not prefer_gpu) で初期化し、GPU を優先利用
-- HEAT.load_checkpoint の戻り値からキャンバスサイズを推定（None の場合は既定 256）
+- HEAT.load_checkpoint で学習済みパラメータを読み込む
 - 入力は BGR 順で推論: model.infer(input_rgb[:, :, [2, 1, 0]])
 
 ## テスト
@@ -127,7 +127,7 @@ poetry run pytest -q tests/test_main.py::TestRunIntegration::test_all -m integra
 
 ## 既知の注意事項
 
-- 本リポジトリの CLI 名称は extract-roofline（run サブコマンド）です。旧名称 detect-roof-edges は使用しません
+- 本リポジトリの CLI 名称は extract-roofline です。旧名称 detect-roof-edges は使用しません
 - 将来的に OBJ/CRS を取り込む場合は、CRS 文字列（例: "EPSG:6677"）を含む JSON サイドカーの採用を検討
 
 ## ライセンス

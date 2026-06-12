@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 import re
 import tempfile
 import urllib.request
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 from typer.testing import CliRunner
@@ -92,11 +94,14 @@ class TestRunIntegration:
 
 
 def assert_json_files_eq(
-    actual_file: Path, expected_file: Path, err_msg: object, exclude: str = None
-):
-    with open(actual_file, "r") as f:
+    actual_file: Path,
+    expected_file: Path,
+    err_msg: object,
+    exclude: str | None = None,
+) -> None:
+    with open(actual_file) as f:
         actual_json = json.load(f)
-    with open(expected_file, "r") as f:
+    with open(expected_file) as f:
         expected_json = json.load(f)
     if exclude:
         actual_json = {k: v for k, v in actual_json.items() if not re.match(exclude, k)}
