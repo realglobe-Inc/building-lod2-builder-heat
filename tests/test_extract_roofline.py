@@ -134,8 +134,8 @@ def _write_input_images(
     :returns: 書き込んだ RGB 画像と depth 画像のパス。
     """
     input_dir_path.mkdir(parents=True, exist_ok=True)
-    rgb_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_RGB
-    depth_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_DEPTH
+    rgb_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_RGB
+    depth_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_DEPTH
     rgb_array = rgb if rgb is not None else np.zeros((4, 4, 3), dtype=np.uint8)
     depth_array = depth if depth is not None else np.zeros((4, 4), dtype=np.uint8)
     Image.fromarray(rgb_array).save(rgb_file_path)

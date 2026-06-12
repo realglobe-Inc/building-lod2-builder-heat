@@ -63,10 +63,8 @@ class RooflineDataset(Dataset[RooflineSample]):
                 continue
 
             building_id = input_dir_path.stem
-            rgb_file_path = input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_RGB
-            depth_file_path = (
-                input_dir_path / file_names.ROOFLINE_EXTRACTION_INPUT_DEPTH
-            )
+            rgb_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_RGB
+            depth_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_DEPTH
 
             if not rgb_file_path.exists() or not depth_file_path.exists():
                 continue

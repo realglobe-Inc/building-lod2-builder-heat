@@ -93,8 +93,8 @@ def save_roofline_result(
 
     # 結果画像を出力する
     if byproduct_dir_path is not None:
-        rgb_out = byproduct_dir_path / file_names.ROOFLINE_EXTRACTION_RESULT_RGB
-        depth_out = byproduct_dir_path / file_names.ROOFLINE_EXTRACTION_RESULT_DEPTH
+        rgb_out = byproduct_dir_path / file_names.EXTRACT_ROOFLINE_RESULT_RGB
+        depth_out = byproduct_dir_path / file_names.EXTRACT_ROOFLINE_RESULT_DEPTH
         if backup:
             _backup_file(rgb_out)
             _backup_file(depth_out)
