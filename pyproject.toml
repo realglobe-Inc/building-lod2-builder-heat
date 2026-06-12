@@ -15,7 +15,7 @@ dependencies = [
     "pillow (>=12.2.0,<13.0.0)",
     "torch (>=2.12.0,<3.0.0)",
     "torchvision (>=0.27.0,<0.28.0)",
-    "typer[all] (>=0.24.1,<0.25.0)",
+    "typer[all] (>=0.26.7,<0.27.0)",
 ]
 
 
@@ -30,8 +30,8 @@ extract-roofline = "building_lod2_builder_heat.commands.extract_roofline.main:ap
 where = ["src"]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^9.0.2"
-ruff = "^0.15.8"
+pytest = "^9.0.3"
+ruff = "^0.15.17"
 
 [tool.pytest.ini_options]
 markers = [
