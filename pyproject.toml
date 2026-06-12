@@ -7,16 +7,15 @@ authors = [
 ]
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14.6,<3.15"
 dependencies = [
+    "heat", # 詳細は下で
     "loguru (>=0.7.3,<0.8.0)",
     "numpy (>=2.4.3,<3.0.0)",
     "pillow (>=12.1.1,<13.0.0)",
-    "typer[all] (>=0.24.1,<0.25.0)",
-    # 詳細は下で
-    "heat",
     "torch (>=2.11.0,<3.0.0)",
     "torchvision (>=0.26.0,<0.27.0)",
+    "typer[all] (>=0.24.1,<0.25.0)",
 ]
 
 
@@ -41,7 +40,7 @@ markers = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "B", "C4", "SIM", "UP", "N", "TID"]
@@ -58,4 +57,4 @@ line-ending = "auto"
 
 
 [tool.poetry.dependencies]
-heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "2025-dev" }
+heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "feat/python-3.14-support" }

@@ -12,11 +12,11 @@
 
 ## 必要な環境
 
-- Python: 3.13 系（pyproject: ">=3.13,<4"）
+- Python: 3.14.6 以上の 3.14 系（pyproject: ">=3.14.6,<3.15"）
 - GPU: 任意（GPU 利用可なら既定で GPU を利用）
 
 HEAT/PyTorch に関する注意:
-- 依存 heat は Git ブランチ（2025-dev）から取得します（ネットワーク必須）。
+- 依存 heat は Git ブランチ（feat/python-3.14-support）から取得します（ネットワーク必須）。
 - 一部環境で torch/torchvision の解決に失敗する場合があります。その際は Poetry の venv に事前インストールしてください（CPU Wheels 例）:
   ```bash
   poetry run pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
@@ -30,8 +30,8 @@ HEAT/PyTorch に関する注意:
 git clone <repository-url>
 cd building-lod2-builder-heat
 
-# Python 3.13 の venv を作成して依存を導入
-poetry env use 3.13
+# Python 3.14.6 の venv を作成して依存を導入
+poetry env use 3.14.6
 poetry install
 ```
 
