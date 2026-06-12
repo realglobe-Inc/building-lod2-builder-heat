@@ -11,10 +11,10 @@ requires-python = ">=3.14.6,<3.15"
 dependencies = [
     "heat", # 詳細は下で
     "loguru (>=0.7.3,<0.8.0)",
-    "numpy (>=2.4.3,<3.0.0)",
-    "pillow (>=12.1.1,<13.0.0)",
-    "torch (>=2.11.0,<3.0.0)",
-    "torchvision (>=0.26.0,<0.27.0)",
+    "numpy (>=2.4.6,<3.0.0)",
+    "pillow (>=12.2.0,<13.0.0)",
+    "torch (>=2.12.0,<3.0.0)",
+    "torchvision (>=0.27.0,<0.28.0)",
     "typer[all] (>=0.24.1,<0.25.0)",
 ]
 
@@ -57,4 +57,4 @@ line-ending = "auto"
 
 
 [tool.poetry.dependencies]
-heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "feat/python-3.14-support" }
+heat = { git = "https://github.com/realglobe-Inc/heat.git", branch = "2026-dev" }

@@ -70,6 +70,7 @@ class TestRunIntegration:
                 str(input_root_dir),
                 "--output-dir",
                 str(output_root_dir),
+                "--force-cpu",
             ],
         )
 

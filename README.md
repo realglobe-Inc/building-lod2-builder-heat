@@ -16,7 +16,7 @@
 - GPU: 任意（GPU 利用可なら既定で GPU を利用）
 
 HEAT/PyTorch に関する注意:
-- 依存 heat は Git ブランチ（feat/python-3.14-support）から取得します（ネットワーク必須）。
+- 依存 heat は Git ブランチ（2026-dev）から取得します（ネットワーク必須）。
 - 一部環境で torch/torchvision の解決に失敗する場合があります。その際は Poetry の venv に事前インストールしてください（CPU Wheels 例）:
   ```bash
   poetry run pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
