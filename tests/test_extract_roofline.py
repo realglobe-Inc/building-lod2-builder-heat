@@ -11,7 +11,6 @@ from typer.testing import CliRunner
 from building_lod2_builder_heat.commands.extract_roofline import main as main_module
 from building_lod2_builder_heat.commands.extract_roofline.dataset import (
     RooflineDataset,
-    load_roofline_images,
 )
 from building_lod2_builder_heat.common import file_names, parameter_keys
 
@@ -53,10 +52,9 @@ def test_roofline_dataset_converts_rgb_to_three_channels(tmp_path: Path) -> None
     RGB 入力は 3 チャンネルへ正規化し、BGR 画像を作る。
     """
     input_dir_path = tmp_path / "building"
-    _write_input_images(
+    _write_input_image(
         input_dir_path,
         rgb=np.full((2, 3, 4), [10, 20, 30, 40], dtype=np.uint8),
-        depth=np.ones((2, 3), dtype=np.uint8),
     )
 
     sample = RooflineDataset(tmp_path, tmp_path / "out", skip_exist=False)[0]
@@ -66,19 +64,15 @@ def test_roofline_dataset_converts_rgb_to_three_channels(tmp_path: Path) -> None
     assert sample["bgr_image"][0, 0].tolist() == [30, 20, 10]
 
 
-def test_load_roofline_images_rejects_size_mismatch(tmp_path: Path) -> None:
+def test_roofline_dataset_ignores_directory_without_rgb(tmp_path: Path) -> None:
     """
-    RGB と depth の画像サイズが違う場合は明示的に失敗する。
+    RGB 入力が存在しないディレクトリは処理対象にしない。
     """
-    input_dir_path = tmp_path / "building"
-    rgb_file_path, depth_file_path = _write_input_images(
-        input_dir_path,
-        rgb=np.zeros((2, 3, 3), dtype=np.uint8),
-        depth=np.zeros((4, 3), dtype=np.uint8),
-    )
+    (tmp_path / "building").mkdir()
 
-    with pytest.raises(ValueError, match="画像サイズが一致しません"):
-        load_roofline_images(rgb_file_path, depth_file_path)
+    dataset = RooflineDataset(tmp_path, tmp_path / "out", skip_exist=False)
+
+    assert len(dataset) == 0
 
 
 def test_cli_records_error_for_each_sample_when_batch_inference_fails(
@@ -94,7 +88,7 @@ def test_cli_records_error_for_each_sample_when_batch_inference_fails(
     input_root_dir_path = tmp_path / "input"
     output_root_dir_path = tmp_path / "output"
     for building_id in ("a", "b"):
-        _write_input_images(input_root_dir_path / building_id)
+        _write_input_image(input_root_dir_path / building_id)
 
     result = CliRunner().invoke(
         main_module.app,
@@ -120,24 +114,19 @@ def test_cli_records_error_for_each_sample_when_batch_inference_fails(
         assert parameter_keys.ROOFLINE_EDGES not in params
 
 
-def _write_input_images(
+def _write_input_image(
     input_dir_path: Path,
     rgb: np.ndarray | None = None,
-    depth: np.ndarray | None = None,
-) -> tuple[Path, Path]:
+) -> Path:
     """
     屋根線抽出用の入力画像を書き込む。
 
     :param input_dir_path: 入力ディレクトリ。
     :param rgb: RGB 画像配列。
-    :param depth: Depth 画像配列。
-    :returns: 書き込んだ RGB 画像と depth 画像のパス。
+    :returns: 書き込んだ RGB 画像のパス。
     """
     input_dir_path.mkdir(parents=True, exist_ok=True)
     rgb_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_RGB
-    depth_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_DEPTH
     rgb_array = rgb if rgb is not None else np.zeros((4, 4, 3), dtype=np.uint8)
-    depth_array = depth if depth is not None else np.zeros((4, 4), dtype=np.uint8)
     Image.fromarray(rgb_array).save(rgb_file_path)
-    Image.fromarray(depth_array).save(depth_file_path)
-    return rgb_file_path, depth_file_path
+    return rgb_file_path

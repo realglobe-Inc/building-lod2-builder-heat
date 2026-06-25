@@ -2,7 +2,7 @@
 
 建築物の屋根輪郭（ルーフライン）を機械学習で抽出し、LOD2（Level of Detail 2）モデリングに必要な屋根エッジ情報を得るための簡易 CLI ツールです。内部で HEAT ライブラリを利用して推論を行います。
 
-本リポジトリは簡素化されたワークフローに基づき、入力は RGB 画像と深度画像（PNG）を前提とします。LAS/OBJ の取り込みはこの縮小版 CLI では扱いません。
+本リポジトリは簡素化されたワークフローに基づき、入力は RGB 画像（PNG）を前提とします。LAS/OBJ の取り込みはこの縮小版 CLI では扱いません。
 
 ## 概要
 
@@ -70,23 +70,19 @@ poetry run extract-roofline roof_edge_detection_parameter.pth data/input_root \
 
 必須:
 - extract_roofline_preprocess_result_rgb.png  （RGB 画像）
-- extract_roofline_preprocess_result_depth.png（深度画像）
 
 出力（対象ごと）:
 - extract_roofline.json
 - --byproduct-dir 指定時:
   - extract_roofline_result_rgb.png
-  - extract_roofline_result_depth.png
 
 例:
 ```
 DATA_ROOT/
   simple/
     extract_roofline_preprocess_result_rgb.png
-    extract_roofline_preprocess_result_depth.png
   complex/
     extract_roofline_preprocess_result_rgb.png
-    extract_roofline_preprocess_result_depth.png
 ```
 
 ## 出力フォーマット（extract_roofline.json）

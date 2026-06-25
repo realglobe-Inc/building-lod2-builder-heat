@@ -19,7 +19,6 @@ class RooflineSampleInfo(TypedDict):
 
     building_id: str
     rgb_file_path: Path
-    depth_file_path: Path
     output_dir_path: Path
 
 
@@ -30,10 +29,8 @@ class RooflineSample(TypedDict):
 
     building_id: str
     input_rgb: NDArray[np.uint8]
-    input_depth: NDArray[np.generic]
     bgr_image: NDArray[np.uint8]
     rgb_file_path: Path
-    depth_file_path: Path
     output_dir_path: Path
 
 
@@ -64,9 +61,8 @@ class RooflineDataset(Dataset[RooflineSample]):
 
             building_id = input_dir_path.stem
             rgb_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_RGB
-            depth_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_DEPTH
 
-            if not rgb_file_path.exists() or not depth_file_path.exists():
+            if not rgb_file_path.exists():
                 continue
 
             output_dir_path = output_root_dir_path / building_id
@@ -84,7 +80,6 @@ class RooflineDataset(Dataset[RooflineSample]):
                 {
                     "building_id": building_id,
                     "rgb_file_path": rgb_file_path,
-                    "depth_file_path": depth_file_path,
                     "output_dir_path": output_dir_path,
                 }
             )
@@ -95,9 +90,8 @@ class RooflineDataset(Dataset[RooflineSample]):
     def __getitem__(self, idx: int) -> RooflineSample:
         sample_info = self.samples[idx]
         rgb_file_path = sample_info["rgb_file_path"]
-        depth_file_path = sample_info["depth_file_path"]
 
-        input_rgb, input_depth = load_roofline_images(rgb_file_path, depth_file_path)
+        input_rgb = load_roofline_image(rgb_file_path)
 
         # HEATモデルはBGR形式を期待する
         bgr_image = np.ascontiguousarray(input_rgb[:, :, [2, 1, 0]])
@@ -105,39 +99,18 @@ class RooflineDataset(Dataset[RooflineSample]):
         return {
             "building_id": sample_info["building_id"],
             "input_rgb": input_rgb,
-            "input_depth": input_depth,
             "bgr_image": bgr_image,
             "rgb_file_path": rgb_file_path,
-            "depth_file_path": depth_file_path,
             "output_dir_path": sample_info["output_dir_path"],
         }
 
 
-def load_roofline_images(
-    rgb_file_path: Path, depth_file_path: Path
-) -> tuple[NDArray[np.uint8], NDArray[np.generic]]:
+def load_roofline_image(rgb_file_path: Path) -> NDArray[np.uint8]:
     """
-    屋根線抽出用の RGB 画像と depth 画像を読み込む。
+    屋根線抽出用の RGB 画像を読み込む。
 
     :param rgb_file_path: RGB画像のパス。
-    :param depth_file_path: Depth画像のパス。
-    :returns: RGB画像と depth 画像。
-    :raises ValueError: depth画像が単一チャンネルでない、または画像サイズが
-        一致しない場合。
+    :returns: RGB画像。
     """
     with Image.open(rgb_file_path) as img:
-        input_rgb = np.array(img.convert("RGB"), dtype=np.uint8)
-    with Image.open(depth_file_path) as img:
-        input_depth = np.array(img)
-
-    if input_depth.ndim != 2:
-        raise ValueError(f"{depth_file_path} は単一チャンネル画像ではありません")
-
-    if input_rgb.shape[:2] != input_depth.shape[:2]:
-        raise ValueError(
-            f"{rgb_file_path} と {depth_file_path} の画像サイズが一致しません: "
-            f"{input_rgb.shape[1]}x{input_rgb.shape[0]} != "
-            f"{input_depth.shape[1]}x{input_depth.shape[0]}"
-        )
-
-    return input_rgb, input_depth
+        return np.array(img.convert("RGB"), dtype=np.uint8)

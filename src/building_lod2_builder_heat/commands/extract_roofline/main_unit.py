@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from PIL import Image, ImageDraw
 
 from building_lod2_builder_heat.commands.extract_roofline.dataset import (
-    load_roofline_images,
+    load_roofline_image,
 )
 from building_lod2_builder_heat.common import file_names, parameter_keys
 from building_lod2_builder_heat.common.parameter import update_parameters
@@ -18,7 +18,6 @@ from building_lod2_builder_heat.common.parameter import update_parameters
 
 def main_unit(
     rgb_file_path: Path,
-    depth_file_path: Path,
     model: HEAT,
     output_dir_path: Path,
     byproduct_dir_path: Path | None = None,
@@ -28,15 +27,13 @@ def main_unit(
     1枚の画像に対して屋根線を抽出し、結果を保存する。
 
     :param rgb_file_path: RGB画像のパス。
-    :param depth_file_path: Depth画像のパス。
     :param model: 推論に使用するモデル。
     :param output_dir_path: 出力先ディレクトリ。
     :param byproduct_dir_path: 副産物（可視化画像）の出力先ディレクトリ。
     :param backup: 既に結果が存在する場合にバックアップを作成するかどうか。
     """
-    input_rgb, input_depth = load_roofline_images(rgb_file_path, depth_file_path)
+    input_rgb = load_roofline_image(rgb_file_path)
 
-    # TODO depthの利用
     corners, edges = model.infer(
         np.ascontiguousarray(input_rgb[:, :, [2, 1, 0]])
     )  # RGB -> BGR
@@ -45,9 +42,7 @@ def main_unit(
         corners=corners,
         edges=edges,
         rgb_file_path=rgb_file_path,
-        depth_file_path=depth_file_path,
         input_rgb=input_rgb,
-        input_depth=input_depth,
         output_dir_path=output_dir_path,
         byproduct_dir_path=byproduct_dir_path,
         backup=backup,
@@ -58,9 +53,7 @@ def save_roofline_result(
     corners: NDArray[np.float64],
     edges: NDArray[np.int32],
     rgb_file_path: Path,
-    depth_file_path: Path,
     input_rgb: NDArray[np.uint8],
-    input_depth: NDArray[np.generic],
     output_dir_path: Path,
     byproduct_dir_path: Path | None = None,
     backup: bool = False,
@@ -71,9 +64,7 @@ def save_roofline_result(
     :param corners: 推論されたコーナー座標。
     :param edges: 推論されたエッジ。
     :param rgb_file_path: 入力RGB画像のパス（メタデータ用）。
-    :param depth_file_path: 入力Depth画像のパス（メタデータ用）。
     :param input_rgb: 入力RGB画像データ。
-    :param input_depth: 入力Depth画像データ。
     :param output_dir_path: 出力先ディレクトリ。
     :param byproduct_dir_path: 副産物（可視化画像）の出力先ディレクトリ。
     :param backup: 既に結果が存在する場合にバックアップを作成するかどうか。
@@ -87,23 +78,16 @@ def save_roofline_result(
         parameter_keys.ROOFLINE_CORNERS: corners.tolist(),
         parameter_keys.ROOFLINE_EDGES: edges.tolist(),
         parameter_keys.SOURCE_RGB: str(rgb_file_path),
-        parameter_keys.SOURCE_DEPTH: str(depth_file_path),
     }
     update_parameters(output_param_file_path, params)
 
     # 結果画像を出力する
     if byproduct_dir_path is not None:
         rgb_out = byproduct_dir_path / file_names.EXTRACT_ROOFLINE_RESULT_RGB
-        depth_out = byproduct_dir_path / file_names.EXTRACT_ROOFLINE_RESULT_DEPTH
         if backup:
             _backup_file(rgb_out)
-            _backup_file(depth_out)
         visualized_rgb = _visualize_detection_results(input_rgb, corners, edges)
         Image.fromarray(visualized_rgb).save(rgb_out)
-        visualized_depth = _visualize_detection_results(
-            np.array(Image.fromarray(input_depth).convert("RGB")), corners, edges
-        )
-        Image.fromarray(visualized_depth).save(depth_out)
 
     logger.info(f"{output_dir_path} に出力しました")
 
