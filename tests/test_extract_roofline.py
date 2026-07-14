@@ -126,7 +126,7 @@ def _write_input_image(
     :returns: 書き込んだ RGB 画像のパス。
     """
     input_dir_path.mkdir(parents=True, exist_ok=True)
-    rgb_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_INPUT_RGB
+    rgb_file_path = input_dir_path / file_names.EXTRACT_ROOFLINE_PREPROCESS_RGB
     rgb_array = rgb if rgb is not None else np.zeros((4, 4, 3), dtype=np.uint8)
     Image.fromarray(rgb_array).save(rgb_file_path)
     return rgb_file_path

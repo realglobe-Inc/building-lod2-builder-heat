@@ -27,7 +27,7 @@ app = typer.Typer()
 
 _DATA_ROOT_HELP = (
     "データディレクトリのパス。各サブディレクトリの以下のファイルが使われます。\n"
-    f"必須: {file_names.EXTRACT_ROOFLINE_INPUT_RGB}。\n"
+    f"必須: {file_names.EXTRACT_ROOFLINE_PREPROCESS_RGB}。\n"
     "オプション: なし。"
 )
 

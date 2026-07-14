@@ -83,7 +83,7 @@ def save_roofline_result(
 
     # 結果画像を出力する
     if byproduct_dir_path is not None:
-        rgb_out = byproduct_dir_path / file_names.EXTRACT_ROOFLINE_RESULT_RGB
+        rgb_out = byproduct_dir_path / file_names.EXTRACT_ROOFLINE_RGB
         if backup:
             _backup_file(rgb_out)
         visualized_rgb = _visualize_detection_results(input_rgb, corners, edges)
