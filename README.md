@@ -121,6 +121,38 @@ poetry run pytest -q tests/test_main.py::TestRunIntegration::test_all -m integra
 - Typer のリッチエラーは --normal-error で無効化でき、その際 _TYPER_STANDARD_TRACEBACK=true が設定されます（標準トレースバック）
 - 入力取り込みに失敗する場合は、ファイル名が上記と一致しているか確認
 
+### GPU 推論で `Not implemented on the CPU` が発生する場合
+
+CUDA が利用可能にもかかわらず HEAT の
+`MultiScaleDeformableAttention` でこのエラーが発生する場合は、現在の
+PyTorch とは異なるバージョンでビルドされた HEAT の C++/CUDA 拡張が
+再利用されている可能性があります。HEAT の build-system を更新した場合でも、
+以前の `build/` や Poetry の artifact にある古い `.so` が wheel に再梱包される
+ことがあります。
+
+`poetry env remove --all` と `poetry install --no-cache` を実行しても、Poetry の
+artifact に保存された古い wheel が再利用される場合があります。その場合は、
+現在の `poetry.lock` に記録されている HEAT のコミットを pip で直接取得し、
+キャッシュを使用せずに再ビルドします。
+
+```bash
+poetry run pip install \
+  --force-reinstall \
+  --no-cache-dir \
+  --no-deps \
+  "git+https://github.com/realglobe-Inc/heat.git@2026-dev"
+```
+
+HEAT の依存コミットを更新した場合は、URL のコミットハッシュも
+`poetry.lock` の `resolved_reference` に合わせてください。再インストール後、
+元の `extract-roofline` コマンドを実行してください。
+すぐに処理を継続する必要があり、GPU を使用しなくてもよい場合は、
+`--force-cpu` を指定すると PyTorch の CPU フォールバックを使用できます。
+
+```bash
+poetry run extract-roofline CHECKPOINT_FILE DATA_ROOT --force-cpu
+```
+
 ## 既知の注意事項
 
 - 本リポジトリの CLI 名称は extract-roofline です。旧名称 detect-roof-edges は使用しません
