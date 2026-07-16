@@ -90,10 +90,13 @@ DATA_ROOT/
 最低限、以下のキーを出力します。
 ```json
 {
-  "roofline_corners": [[10, 20], [30, 40]],
+  "roofline_corners": [[10.5, 20.5], [30.5, 40.5]],
   "roofline_edges": [[0, 1]]
 }
 ```
+
+`roofline_corners` は画像左上の外周を `(0, 0)` とする連続画像座標です。
+HEAT が返す画素indexには、画素中心を表すため各軸に `0.5` を加えて保存します。
 
 ## HEAT モデル/推論のポイント
 

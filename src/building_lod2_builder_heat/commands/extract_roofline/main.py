@@ -15,6 +15,7 @@ from building_lod2_builder_heat.commands.extract_roofline.dataset import (
     RooflineSample,
 )
 from building_lod2_builder_heat.commands.extract_roofline.main_unit import (
+    heat_pixel_indices_to_image_coordinates,
     save_roofline_result,
 )
 from building_lod2_builder_heat.common import file_names, parameter_keys
@@ -171,6 +172,7 @@ def run(
 
         # 各サンプルの結果を保存
         for sample, (corners, edges) in zip(batch, batch_results, strict=True):
+            corners = heat_pixel_indices_to_image_coordinates(corners)
             building_id = sample["building_id"]
             output_dir_path = sample["output_dir_path"]
             logger.info(f"{building_id} を処理します")

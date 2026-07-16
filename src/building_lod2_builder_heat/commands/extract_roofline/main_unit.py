@@ -37,6 +37,7 @@ def main_unit(
     corners, edges = model.infer(
         np.ascontiguousarray(input_rgb[:, :, [2, 1, 0]])
     )  # RGB -> BGR
+    corners = heat_pixel_indices_to_image_coordinates(corners)
 
     save_roofline_result(
         corners=corners,
@@ -92,6 +93,21 @@ def save_roofline_result(
     logger.info(f"{output_dir_path} に出力しました")
 
 
+def heat_pixel_indices_to_image_coordinates(
+    corners: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    """
+    HEAT の画素index角点を画像外周基準の連続座標へ変換する。
+
+    HEAT の整数座標は画素中心を表すため、共通の連続画像座標では
+    各軸に0.5を加えた位置となる。
+
+    :param corners: HEAT が返す画素index角点。
+    :returns: 画素中心を表す連続画像座標。
+    """
+    return np.asarray(corners, dtype=np.float64) + 0.5
+
+
 def _visualize_detection_results(
     image: NDArray[np.uint8], corners: NDArray[np.float64], edges: NDArray[np.int32]
 ) -> NDArray[np.uint8]:
@@ -106,17 +122,18 @@ def _visualize_detection_results(
     """
     pil_image = Image.fromarray(image)
     draw = ImageDraw.Draw(pil_image)
+    pixel_corners = np.floor(corners).astype(np.int32)
 
     # エッジを描画（緑色の線）
     edge: NDArray[np.int32]
     for edge in edges:
-        start_point = list(corners[edge[0]])
-        end_point = list(corners[edge[1]])
+        start_point = list(pixel_corners[edge[0]])
+        end_point = list(pixel_corners[edge[1]])
         draw.line([start_point, end_point], fill=(0, 255, 0), width=1)
 
     d = 2
     # 角点を描画（赤色の円）
-    for corner in corners:
+    for corner in pixel_corners:
         x, y = corner
         # 円を描画（半径dの円）
         draw.ellipse([x - d, y - d, x + d, y + d], fill=(0, 0, 255))

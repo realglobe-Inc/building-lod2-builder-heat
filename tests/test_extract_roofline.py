@@ -47,6 +47,44 @@ class FailingHeat:
         raise RuntimeError("boom")
 
 
+class SuccessfulHeat:
+    """
+    固定した角点と辺を返す HEAT テストダブル。
+    """
+
+    device = "cpu"
+
+    def __init__(self, force_cpu: bool) -> None:
+        """
+        :param force_cpu: CPU 強制指定。
+        """
+        self.force_cpu = force_cpu
+
+    def load_checkpoint(self, checkpoint_file_path: Path) -> None:
+        """
+        チェックポイント読み込みを成功扱いにする。
+
+        :param checkpoint_file_path: チェックポイントのパス。
+        """
+
+    def infer_batch(
+        self, bgr_images: list[np.ndarray]
+    ) -> list[tuple[np.ndarray, np.ndarray]]:
+        """
+        各画像に固定した推論結果を返す。
+
+        :param bgr_images: BGR 画像のリスト。
+        :returns: HEAT の画素index角点と辺。
+        """
+        return [
+            (
+                np.array([[0, 0], [3, 2]], dtype=np.int64),
+                np.array([[0, 1]], dtype=np.int32),
+            )
+            for _ in bgr_images
+        ]
+
+
 def test_roofline_dataset_converts_rgb_to_three_channels(tmp_path: Path) -> None:
     """
     RGB 入力は 3 チャンネルへ正規化し、BGR 画像を作る。
@@ -112,6 +150,40 @@ def test_cli_records_error_for_each_sample_when_batch_inference_fails(
         assert params[parameter_keys.ERROR] == "boom"
         assert "RuntimeError: boom" in params[parameter_keys.TRACEBACK]
         assert parameter_keys.ROOFLINE_EDGES not in params
+
+
+def test_cli_converts_heat_pixel_indices_to_continuous_coordinates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """
+    HEAT の画素index角点は保存前に画素中心の連続座標へ変換する。
+    """
+    monkeypatch.setattr(main_module, "HEAT", SuccessfulHeat)
+
+    checkpoint_file_path = tmp_path / "checkpoint.pth"
+    checkpoint_file_path.touch()
+    input_root_dir_path = tmp_path / "input"
+    output_root_dir_path = tmp_path / "output"
+    _write_input_image(input_root_dir_path / "building")
+
+    result = CliRunner().invoke(
+        main_module.app,
+        [
+            str(checkpoint_file_path),
+            str(input_root_dir_path),
+            "--output-dir",
+            str(output_root_dir_path),
+            "--force-cpu",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    output_file_path = (
+        output_root_dir_path / "building" / file_names.EXTRACT_ROOFLINE_OUTPUT
+    )
+    params = json.loads(output_file_path.read_text(encoding="utf-8"))
+    assert params[parameter_keys.ROOFLINE_CORNERS] == [[0.5, 0.5], [3.5, 2.5]]
+    assert params[parameter_keys.ROOFLINE_EDGES] == [[0, 1]]
 
 
 def _write_input_image(
